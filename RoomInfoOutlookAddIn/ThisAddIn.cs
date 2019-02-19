@@ -12,6 +12,8 @@ namespace RoomInfoOutlookAddIn
     {
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
+            Outlook.Application application = Application;
+            Outlook.Inspectors inspectors = application.Inspectors;
         }
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
