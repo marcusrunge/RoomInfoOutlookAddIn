@@ -21,7 +21,7 @@
     <ProjectTypeGuids>{BAA0C2D2-18E2-41B9-852F-F413020CAA33};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{605BF9D6-444E-4B06-A662-76193A3ECD5B}</ProjectGuid>
+    <ProjectGuid>{464645E7-96B5-46B7-9D78-B3983EEF85BA}</ProjectGuid>
     <OutputType>Library</OutputType>
     <NoStandardLibraries>false</NoStandardLibraries>
     <RootNamespace>RoomInfoOutlookAddIn</RootNamespace>
@@ -159,18 +159,10 @@
     can be found.
   -->
   <ItemGroup>
-    <Compile Include="MainRibbon.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="MainRibbon.Designer.cs">
-      <DependentUpon>MainRibbon.cs</DependentUpon>
-    </Compile>
+    <Compile Include="MainRibbon.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
-    <EmbeddedResource Include="MainRibbon.resx">
-      <DependentUpon>MainRibbon.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -200,6 +192,9 @@
     </Compile>
     <AppDesigner Include="Properties\" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="MainRibbon.xml" />
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -211,7 +206,7 @@
     <ManifestKeyFile>RoomInfoOutlookAddIn_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>2E3D286DD72A55DC35860F987470C7B73602C184</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>B584D00EB7C8BD55DDCE30F0464FAC4430182B24</ManifestCertificateThumbprint>
   </PropertyGroup>
   <!-- Include the build rules for a C# project. -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

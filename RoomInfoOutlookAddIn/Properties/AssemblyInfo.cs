@@ -11,7 +11,7 @@ using System.Security;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("RoomInfoOutlookAddIn")]
-[assembly: AssemblyCopyright("Copyright ©  2018")]
+[assembly: AssemblyCopyright("Copyright ©  2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -21,7 +21,7 @@ using System.Security;
 [assembly: ComVisible(false)]
 
 // Die folgende GUID bestimmt die ID der Typbibliothek, wenn dieses Projekt für COM verfügbar gemacht wird
-[assembly: Guid("fd7cbccc-0fd0-45ec-afe9-16a10dfda65b")]
+[assembly: Guid("ba0eb2fa-4ec4-4e5b-aad8-d055dc27ab7b")]
 
 // Versionsinformationen für eine Assembly bestehen aus den folgenden vier Werten:
 //
