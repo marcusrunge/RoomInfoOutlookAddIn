@@ -2,7 +2,7 @@
 <customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load">
   <ribbon>
     <tabs>
-      <tab idMso="TabAddIns">
+      <tab idMso="TabAddIns" label="Roominfo Remote" >
         <group id="roomInfoRemoteRooms" label="Rooms">
           <dropDown id="roomsDropDown" onAction="OnRoomsDropDownAction">
             <item id="item1" label="Item 1" />
@@ -10,21 +10,20 @@
             <item id="item3" label="Item 3" />
           </dropDown>
           <dropDown id="occupancyDropDown" onAction="OnOccupancyDropDownAction">
-            <item id="free" label="Free" />
+            <item id="free" label="Free"/>
             <item id="present" label="Present" />
             <item id="absent" label="Absent" />
             <item id="busy" label="Busy" />
             <item id="occupied" label="Occupied" />
             <item id="locked" label="Locked" />
           </dropDown>
+          <button id="agendaButton" label="Agenda" onAction="OnAgendaButtonAction" />
         </group>
-      </tab>
-      <tab idMso="TabAddIns">
-        <group id="roomInfoRemoteSettings" label="Settings">
+      <group id="roomInfoRemoteSettings" label="Settings">
           <editBox id="tcpPort" onChange="OnTcpPortChange" showLabel="true" label="TCP Port:"/>
           <editBox id="udpPort" onChange="OnUdpPortChange" showLabel="true" label="UDP Port:"/>
         </group>
-      </tab>
+      </tab>      
     </tabs>
   </ribbon>
 </customUI>

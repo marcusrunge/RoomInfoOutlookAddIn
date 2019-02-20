@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Office.Core;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,13 +29,18 @@ using Office = Microsoft.Office.Core;
 
 namespace RoomInfoOutlookAddIn
 {
-    [ComVisible(true)]
-    public class MainRibbon : Office.IRibbonExtensibility
+    public interface IMainRibbon : IRibbonExtensibility
     {
-        private Office.IRibbonUI ribbon;
+    }
+
+    [ComVisible(true)]
+    public class MainRibbon : IMainRibbon
+    {
+        private IRibbonUI ribbon;
 
         public MainRibbon()
         {
+
         }
 
         #region IRibbonExtensibility-Member
@@ -49,9 +55,9 @@ namespace RoomInfoOutlookAddIn
         #region Menübandrückrufe
         //Erstellen Sie hier Rückrufmethoden. Weitere Informationen zum Hinzufügen von Rückrufmethoden finden Sie unter https://go.microsoft.com/fwlink/?LinkID=271226.
 
-        public void Ribbon_Load(Office.IRibbonUI ribbonUI)
+        public void Ribbon_Load(IRibbonUI ribbonUI)
         {
-            this.ribbon = ribbonUI;
+            ribbon = ribbonUI;
         }
 
         #endregion
@@ -80,22 +86,27 @@ namespace RoomInfoOutlookAddIn
 
         #endregion
 
-        public void OnTcpPortChange(Office.IRibbonControl control)
+        public void OnTcpPortChange(IRibbonControl control)
         {
             
         }
 
-        public void OnUdpPortChange(Office.IRibbonControl control)
+        public void OnUdpPortChange(IRibbonControl control)
         {
 
         }
 
-        public void OnRoomsDropDownAction(Office.IRibbonControl control)
+        public void OnRoomsDropDownAction(IRibbonControl control)
         {
 
         }
 
-        public void OnOccupancyDropDownAction(Office.IRibbonControl control)
+        public void OnOccupancyDropDownAction(IRibbonControl control)
+        {
+
+        }
+
+        public void OnAgendaButtonAction(IRibbonControl control)
         {
 
         }

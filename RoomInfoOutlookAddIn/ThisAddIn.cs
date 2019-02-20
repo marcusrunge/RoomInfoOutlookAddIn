@@ -5,16 +5,24 @@ using System.Text;
 using System.Xml.Linq;
 using Outlook = Microsoft.Office.Interop.Outlook;
 using Office = Microsoft.Office.Core;
+using System.Threading;
+using System.Globalization;
+using Unity;
+using Microsoft.Office.Core;
+using Microsoft.Office.Tools;
 
 namespace RoomInfoOutlookAddIn
 {
     public partial class ThisAddIn
     {
-        private void ThisAddIn_Startup(object sender, System.EventArgs e)
+        IUnityContainer _unityContainer;        
+
+        private void ThisAddIn_Startup(object sender, EventArgs e)
         {
+
         }
 
-        private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
+        private void ThisAddIn_Shutdown(object sender, EventArgs e)
         {
             // Hinweis: Outlook löst dieses Ereignis nicht mehr aus. Wenn Code vorhanden ist, der 
             //    muss ausgeführt werden, wenn Outlook heruntergefahren wird. Weitere Informationen finden Sie unter https://go.microsoft.com/fwlink/?LinkId=506785.
@@ -28,15 +36,20 @@ namespace RoomInfoOutlookAddIn
         /// </summary>
         private void InternalStartup()
         {
-            this.Startup += new System.EventHandler(ThisAddIn_Startup);
-            this.Shutdown += new System.EventHandler(ThisAddIn_Shutdown);
+            Startup += new EventHandler(ThisAddIn_Startup);
+            Shutdown += new EventHandler(ThisAddIn_Shutdown);
         }
 
         #endregion
 
-        protected override Office.IRibbonExtensibility CreateRibbonExtensibilityObject()
+        protected override IRibbonExtensibility CreateRibbonExtensibilityObject()
         {
-            return new MainRibbon();
+            _unityContainer = new UnityContainer();
+            _unityContainer.RegisterSingleton<IMainRibbon, MainRibbon>();
+            Outlook.Application outlookApplication = GetHostItem<Outlook.Application>(typeof(Outlook.Application), "Application");
+            int languageID = outlookApplication.LanguageSettings.get_LanguageID(MsoAppLanguageID.msoLanguageIDUI);
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo(languageID);
+            return _unityContainer.Resolve<IMainRibbon>();
         }
     }
 }
