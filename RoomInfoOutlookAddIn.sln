@@ -5,6 +5,10 @@ VisualStudioVersion = 15.0.28307.168
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoomInfoOutlookAddIn", "RoomInfoOutlookAddIn\RoomInfoOutlookAddIn.csproj", "{464645E7-96B5-46B7-9D78-B3983EEF85BA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationServiceLibrary", "ApplicationServiceLibrary\ApplicationServiceLibrary.csproj", "{8933C6A8-55DF-407E-8F38-F5D5C798BB13}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelLibrary", "ModelLibrary\ModelLibrary.csproj", "{13314656-EDC6-44BE-A713-B316C7FB4452}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{464645E7-96B5-46B7-9D78-B3983EEF85BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{464645E7-96B5-46B7-9D78-B3983EEF85BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{464645E7-96B5-46B7-9D78-B3983EEF85BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8933C6A8-55DF-407E-8F38-F5D5C798BB13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8933C6A8-55DF-407E-8F38-F5D5C798BB13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8933C6A8-55DF-407E-8F38-F5D5C798BB13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8933C6A8-55DF-407E-8F38-F5D5C798BB13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13314656-EDC6-44BE-A713-B316C7FB4452}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13314656-EDC6-44BE-A713-B316C7FB4452}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13314656-EDC6-44BE-A713-B316C7FB4452}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13314656-EDC6-44BE-A713-B316C7FB4452}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

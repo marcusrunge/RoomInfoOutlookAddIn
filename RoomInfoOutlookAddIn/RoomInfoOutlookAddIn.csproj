@@ -208,6 +208,16 @@
   <ItemGroup>
     <EmbeddedResource Include="MainRibbon.xml" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ApplicationServiceLibrary\ApplicationServiceLibrary.csproj">
+      <Project>{8933c6a8-55df-407e-8f38-f5d5c798bb13}</Project>
+      <Name>ApplicationServiceLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ModelLibrary\ModelLibrary.csproj">
+      <Project>{13314656-edc6-44be-a713-b316c7fb4452}</Project>
+      <Name>ModelLibrary</Name>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
