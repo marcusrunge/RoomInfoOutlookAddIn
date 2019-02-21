@@ -1,12 +1,13 @@
 ﻿using Microsoft.Office.Core;
+using ModelLibrary;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
-using Office = Microsoft.Office.Core;
+using static ModelLibrary.Enums;
 
 // TODO:  Führen Sie diese Schritte aus, um das Element auf dem Menüband (XML) zu aktivieren:
 
@@ -37,6 +38,10 @@ namespace RoomInfoOutlookAddIn
     public class MainRibbon : IMainRibbon
     {
         private IRibbonUI ribbon;
+
+        public List<RoomItem> RoomItems { get; private set; }
+        public List<AgendaItem> AgendaItems { get; private set; }
+        public AgendaItem AgendaItem { get; private set; }
 
         public MainRibbon()
         {
@@ -109,6 +114,47 @@ namespace RoomInfoOutlookAddIn
         public void OnAgendaButtonAction(IRibbonControl control)
         {
 
+        }
+
+        private void ProcessPackage(Package package, string hostName)
+        {
+            switch ((PayloadType)package.PayloadType)
+            {
+                case PayloadType.Occupancy:
+                    break;
+                case PayloadType.Room:
+                    if (RoomItems == null) RoomItems = new List<RoomItem>();
+                    var room = JsonConvert.DeserializeObject<Room>(package.Payload.ToString());
+                        for (int i = 0; i < RoomItems.Count; i++)
+                        {
+                            if (RoomItems[i].Room.RoomGuid.Equals(room.RoomGuid))
+                            {
+                                RoomItems.RemoveAt(i);
+                                break;
+                            }
+                        }                    
+                    break;
+                case PayloadType.Schedule:
+                    AgendaItems = new List<AgendaItem>(JsonConvert.DeserializeObject<AgendaItem[]>(package.Payload.ToString()));
+                    break;
+                case PayloadType.StandardWeek:
+                    break;
+                case PayloadType.RequestOccupancy:
+                    break;
+                case PayloadType.RequestSchedule:
+                    break;
+                case PayloadType.RequestStandardWeek:
+                    break;
+                case PayloadType.IotDim:
+                    break;
+                case PayloadType.AgendaItem:
+                    break;
+                case PayloadType.AgendaItemId:
+                    AgendaItem.Id = (int)Convert.ChangeType(package.Payload, typeof(int));
+                    break;
+                default:
+                    break;
+            }
         }
     }
 }

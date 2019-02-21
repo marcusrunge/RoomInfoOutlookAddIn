@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ApplicationServiceLibrary
+namespace ModelLibrary
 {
-    public class UserDatagramService
+    public class StandardWeek
     {
+        public int Id { get; set; }
     }
 }

@@ -41,9 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TransmissionControlService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UserDatagramService.cs" />
+    <Compile Include="NetworkCommunication.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ModelLibrary\ModelLibrary.csproj">

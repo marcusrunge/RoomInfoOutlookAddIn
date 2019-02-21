@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Xml.Linq;
 using Outlook = Microsoft.Office.Interop.Outlook;
-using Office = Microsoft.Office.Core;
 using System.Threading;
 using System.Globalization;
 using Unity;
 using Microsoft.Office.Core;
-using Microsoft.Office.Tools;
+using ApplicationServiceLibrary;
 
 namespace RoomInfoOutlookAddIn
 {
@@ -46,6 +41,7 @@ namespace RoomInfoOutlookAddIn
         {
             _unityContainer = new UnityContainer();
             _unityContainer.RegisterSingleton<IMainRibbon, MainRibbon>();
+            _unityContainer.RegisterSingleton<INetworkCommunication, NetworkCommunication>();
             Outlook.Application outlookApplication = GetHostItem<Outlook.Application>(typeof(Outlook.Application), "Application");
             int languageID = outlookApplication.LanguageSettings.get_LanguageID(MsoAppLanguageID.msoLanguageIDUI);
             Thread.CurrentThread.CurrentUICulture = new CultureInfo(languageID);
