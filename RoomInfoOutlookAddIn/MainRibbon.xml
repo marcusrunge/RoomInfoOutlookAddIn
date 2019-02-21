@@ -21,7 +21,7 @@
           <button id="recycleButton" label="Recycle" onAction="OnAction" />
         </group>
       <group id="roomInfoRemoteSettings" label="Settings">
-          <editBox id="tcpPort" onChange="OnChange" showLabel="true" label="TCP Port:"/>
+          <editBox id="tcpPort" onChange="OnChange" showLabel="true" label="TCP Port:" getText="OnGetText"/>
           <editBox id="udpPort" onChange="OnChange" showLabel="true" label="UDP Port:"/>
         </group>
       </tab>      

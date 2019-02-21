@@ -119,6 +119,11 @@ namespace RoomInfoOutlookAddIn
             }
         }
 
+        public void OnGetText(IRibbonControl control)
+        {
+            //https://shulerent.com/2011/08/16/changing-the-value-of-an-editbox-office-ribbon-control-at-runtime/
+        }
+
         public void OnRoomsDropDownAction(IRibbonControl control)
         {
 
