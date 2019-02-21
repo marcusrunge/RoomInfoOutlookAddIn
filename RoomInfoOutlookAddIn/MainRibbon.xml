@@ -22,7 +22,7 @@
         </group>
       <group id="roomInfoRemoteSettings" label="Settings">
           <editBox id="tcpPort" onChange="OnChange" showLabel="true" label="TCP Port:" getText="OnGetText"/>
-          <editBox id="udpPort" onChange="OnChange" showLabel="true" label="UDP Port:"/>
+          <editBox id="udpPort" onChange="OnChange" showLabel="true" label="UDP Port:" getText="OnGetText"/>
         </group>
       </tab>      
     </tabs>

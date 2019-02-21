@@ -22,32 +22,40 @@ namespace ApplicationServiceLibrary
 
         public async Task SendPayload(string payload, string hostName, string port, NetworkProtocol networkProtocol, bool broadcast = false)
         {
-            switch (networkProtocol)
+            try
             {
-                case NetworkProtocol.UserDatagram:
-                    await SendUserDatagramPayload(payload, hostName, port, broadcast);
-                    break;
-                case NetworkProtocol.TransmissionControl:
-                    await SendTransmissionControlPayload(payload, hostName, port);
-                    break;
-                default:
-                    break;
+                switch (networkProtocol)
+                {
+                    case NetworkProtocol.UserDatagram:
+                        await SendUserDatagramPayload(payload, hostName, port, broadcast);
+                        break;
+                    case NetworkProtocol.TransmissionControl:
+                        await SendTransmissionControlPayload(payload, hostName, port);
+                        break;
+                    default:
+                        break;
+                }
             }
+            catch { }
         }
 
         public async Task StartConnectionListener(string port, NetworkProtocol networkProtocol)
         {
-            switch (networkProtocol)
+            try
             {
-                case NetworkProtocol.UserDatagram:
-                    await ListenForUserDatagramConnection(port);
-                    break;
-                case NetworkProtocol.TransmissionControl:
-                    await ListenForTransmissionControlConnection(port);
-                    break;
-                default:
-                    break;
+                switch (networkProtocol)
+                {
+                    case NetworkProtocol.UserDatagram:
+                        await ListenForUserDatagramConnection(port);
+                        break;
+                    case NetworkProtocol.TransmissionControl:
+                        await ListenForTransmissionControlConnection(port);
+                        break;
+                    default:
+                        break;
+                }
             }
+            catch { }
         }
 
         private async Task ListenForTransmissionControlConnection(string port)

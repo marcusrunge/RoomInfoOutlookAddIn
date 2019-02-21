@@ -119,9 +119,14 @@ namespace RoomInfoOutlookAddIn
             }
         }
 
-        public void OnGetText(IRibbonControl control)
+        public string OnGetText(IRibbonControl control)
         {
-            //https://shulerent.com/2011/08/16/changing-the-value-of-an-editbox-office-ribbon-control-at-runtime/
+            switch (control.Id)
+            {
+                case "tcpPort": return Properties.Settings.Default.TcpPort;
+                case "udpPort": return Properties.Settings.Default.UdpPort;
+                default: return "";
+            }
         }
 
         public void OnRoomsDropDownAction(IRibbonControl control)
