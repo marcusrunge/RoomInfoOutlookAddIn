@@ -17,11 +17,12 @@
             <item id="occupied" label="Occupied" />
             <item id="locked" label="Locked" />
           </dropDown>
-          <button id="agendaButton" label="Agenda" onAction="OnAgendaButtonAction" />
+          <button id="agendaButton" label="Agenda" onAction="OnAction" />
+          <button id="recycleButton" label="Recycle" onAction="OnAction" />
         </group>
       <group id="roomInfoRemoteSettings" label="Settings">
-          <editBox id="tcpPort" onChange="OnTcpPortChange" showLabel="true" label="TCP Port:"/>
-          <editBox id="udpPort" onChange="OnUdpPortChange" showLabel="true" label="UDP Port:"/>
+          <editBox id="tcpPort" onChange="OnChange" showLabel="true" label="TCP Port:"/>
+          <editBox id="udpPort" onChange="OnChange" showLabel="true" label="UDP Port:"/>
         </group>
       </tab>      
     </tabs>

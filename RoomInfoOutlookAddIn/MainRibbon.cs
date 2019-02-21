@@ -1,4 +1,5 @@
-﻿using Microsoft.Office.Core;
+﻿using ApplicationServiceLibrary;
+using Microsoft.Office.Core;
 using ModelLibrary;
 using Newtonsoft.Json;
 using System;
@@ -38,14 +39,17 @@ namespace RoomInfoOutlookAddIn
     public class MainRibbon : IMainRibbon
     {
         private IRibbonUI ribbon;
+        private INetworkCommunication _networkCommunication;
 
         public List<RoomItem> RoomItems { get; private set; }
         public List<AgendaItem> AgendaItems { get; private set; }
         public AgendaItem AgendaItem { get; private set; }
 
-        public MainRibbon()
+        public MainRibbon(INetworkCommunication networkCommunication)
         {
-
+            _networkCommunication = networkCommunication;
+            _networkCommunication.StartConnectionListener(Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
+            _networkCommunication.PayloadReceived += (s, e) => ProcessPackage(JsonConvert.DeserializeObject<Package>(e.Package), e.HostName);
         }
 
         #region IRibbonExtensibility-Member
@@ -91,14 +95,28 @@ namespace RoomInfoOutlookAddIn
 
         #endregion
 
-        public void OnTcpPortChange(IRibbonControl control)
+        public void OnChange(IRibbonControl control, string text)
         {
-            
-        }
-
-        public void OnUdpPortChange(IRibbonControl control)
-        {
-
+            int parsed;
+            switch (control.Id)
+            {
+                case "tcpPort":
+                    if (int.TryParse(text, out parsed))
+                    {
+                        Properties.Settings.Default.TcpPort = text;
+                        Properties.Settings.Default.Save();
+                    }
+                    break;
+                case "udpPort":
+                    if (int.TryParse(text, out parsed))
+                    {
+                        Properties.Settings.Default.UdpPort = text;
+                        Properties.Settings.Default.Save();
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
 
         public void OnRoomsDropDownAction(IRibbonControl control)
@@ -111,43 +129,40 @@ namespace RoomInfoOutlookAddIn
 
         }
 
-        public void OnAgendaButtonAction(IRibbonControl control)
+        public void OnAction(IRibbonControl control)
         {
-
+            switch (control.Id)
+            {
+                case "agendaButton":
+                    break;
+                case "recycleButton":
+                    _networkCommunication.SendPayload("", null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
+                    break;
+                default:
+                    break;
+            }
         }
 
         private void ProcessPackage(Package package, string hostName)
         {
             switch ((PayloadType)package.PayloadType)
             {
-                case PayloadType.Occupancy:
-                    break;
                 case PayloadType.Room:
                     if (RoomItems == null) RoomItems = new List<RoomItem>();
                     var room = JsonConvert.DeserializeObject<Room>(package.Payload.ToString());
-                        for (int i = 0; i < RoomItems.Count; i++)
+                    for (int i = 0; i < RoomItems.Count; i++)
+                    {
+                        if (RoomItems[i].Room.RoomGuid.Equals(room.RoomGuid))
                         {
-                            if (RoomItems[i].Room.RoomGuid.Equals(room.RoomGuid))
-                            {
-                                RoomItems.RemoveAt(i);
-                                break;
-                            }
-                        }                    
+                            RoomItems.RemoveAt(i);
+                            break;
+                        }
+                    }
                     break;
                 case PayloadType.Schedule:
                     AgendaItems = new List<AgendaItem>(JsonConvert.DeserializeObject<AgendaItem[]>(package.Payload.ToString()));
                     break;
                 case PayloadType.StandardWeek:
-                    break;
-                case PayloadType.RequestOccupancy:
-                    break;
-                case PayloadType.RequestSchedule:
-                    break;
-                case PayloadType.RequestStandardWeek:
-                    break;
-                case PayloadType.IotDim:
-                    break;
-                case PayloadType.AgendaItem:
                     break;
                 case PayloadType.AgendaItemId:
                     AgendaItem.Id = (int)Convert.ChangeType(package.Payload, typeof(int));
