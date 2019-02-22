@@ -42,13 +42,16 @@ namespace RoomInfoOutlookAddIn
         private IRibbonUI ribbon;
         private INetworkCommunication _networkCommunication;
 
-        public List<RoomItem> RoomItems { get; private set; }
-        public List<AgendaItem> AgendaItems { get; private set; }
-        public AgendaItem AgendaItem { get; private set; }
+        private List<RoomItem> _roomItems;
+        private List<AgendaItem> _agendaItems;
+        private AgendaItem _agendaItem;
 
         public MainRibbon(INetworkCommunication networkCommunication)
         {
             _networkCommunication = networkCommunication;
+            _agendaItems = new List<AgendaItem>();
+            _roomItems = new List<RoomItem>();
+            _agendaItem = new AgendaItem();
             _networkCommunication.StartConnectionListener(Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
             _networkCommunication.PayloadReceived += (s, e) => ProcessPackage(JsonConvert.DeserializeObject<Package>(e.Package), e.HostName);
         }
@@ -130,10 +133,7 @@ namespace RoomInfoOutlookAddIn
             }
         }
 
-        public int GetItemCount(IRibbonControl control)
-        {
-            return 5;
-        }
+        public int GetItemCount(IRibbonControl control) => _roomItems != null ? _roomItems.Count : 0;
 
         public void OnAction(IRibbonControl control)
         {
@@ -153,51 +153,35 @@ namespace RoomInfoOutlookAddIn
             }
         }
 
-        public string GetItemLabel(IRibbonControl control, int index)
-        {
-            return index.ToString();
-        }
+        public string GetItemLabel(IRibbonControl control, int index) => _roomItems[index].Room.RoomName;
 
-        public string GetItemID(IRibbonControl control, int index)
-        {
-            return index.ToString();
-        }
+        public string GetItemID(IRibbonControl control, int index) => index.ToString();
 
         private void ProcessPackage(Package package, string hostName)
         {
             switch ((PayloadType)package.PayloadType)
             {
                 case PayloadType.Room:
-                    if (RoomItems == null) RoomItems = new List<RoomItem>();
+                    if (_roomItems == null) _roomItems = new List<RoomItem>();
                     var room = JsonConvert.DeserializeObject<Room>(package.Payload.ToString());
-                    for (int i = 0; i < RoomItems.Count; i++)
+                    for (int i = 0; i < _roomItems.Count; i++)
                     {
-                        if (RoomItems[i].Room.RoomGuid.Equals(room.RoomGuid))
+                        if (_roomItems[i].Room.RoomGuid.Equals(room.RoomGuid))
                         {
-                            RoomItems.RemoveAt(i);
+                            _roomItems.RemoveAt(i);
                             break;
                         }
-                    }                    
-
-                    //RibbonDropDown ribbonDropDown = null;
-                    //ribbonDropDown.Items.Clear();
-
-                    //foreach (var roomItem in RoomItems)
-                    //{
-                    //    RibbonDropDownItem ribbonDropDownItem = Globals.Factory.GetRibbonFactory().CreateRibbonDropDownItem();
-                    //    ribbonDropDownItem.Label = roomItem.Room.RoomNumber + roomItem.Room.RoomName;
-                    //    ribbonDropDown.Items.Add(ribbonDropDownItem);
-                    //}
-                    
-
+                    }
+                    _roomItems.Add(new RoomItem() { HostName = hostName, Room = room });
+                    ribbon.Invalidate();
                     break;
                 case PayloadType.Schedule:
-                    AgendaItems = new List<AgendaItem>(JsonConvert.DeserializeObject<AgendaItem[]>(package.Payload.ToString()));
+                    _agendaItems = new List<AgendaItem>(JsonConvert.DeserializeObject<AgendaItem[]>(package.Payload.ToString()));
                     break;
                 case PayloadType.StandardWeek:
                     break;
                 case PayloadType.AgendaItemId:
-                    AgendaItem.Id = (int)Convert.ChangeType(package.Payload, typeof(int));
+                    _agendaItem.Id = (int)Convert.ChangeType(package.Payload, typeof(int));
                     break;
                 default:
                     break;

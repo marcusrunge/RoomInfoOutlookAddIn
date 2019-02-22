@@ -4,9 +4,7 @@
     <tabs>
       <tab idMso="TabAddIns" label="Roominfo Remote">
         <group id="roomInfoRemoteRooms" label="Rooms">
-          <dropDown id="roomsDropDown" onAction="OnDropDownAction" getItemCount="GetItemCount" getItemLabel="GetItemLabel">
-            
-          </dropDown>
+          <dropDown id="roomsDropDown" onAction="OnDropDownAction" getItemCount="GetItemCount" getItemLabel="GetItemLabel"/>
           <dropDown id="occupancyDropDown" onAction="OnDropDownAction">
             <item id="free" label="Free"/>
             <item id="present" label="Present" />
