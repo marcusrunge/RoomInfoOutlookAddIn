@@ -153,9 +153,26 @@ namespace RoomInfoOutlookAddIn
             }
         }
 
-        public string GetItemLabel(IRibbonControl control, int index) => _roomItems[index].Room.RoomName;
+        public string GetItemLabel(IRibbonControl control, int index)
+        {
+            var roomNumber = _roomItems[index].Room.RoomNumber;
+            var roomName = _roomItems[index].Room.RoomName;
+            return !(string.IsNullOrEmpty(roomNumber) || string.IsNullOrWhiteSpace(roomNumber))
+                ? !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName + " " + roomNumber : roomNumber
+                : !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName : "";
+        }
 
-        public string GetItemID(IRibbonControl control, int index) => index.ToString();
+        public string GetItemID(IRibbonControl control, int index) => _roomItems[index].Room.RoomGuid;
+
+        public int GetSelectedItemIndex(IRibbonControl control)
+        {
+            switch (control.Id)
+            {
+                case "roomsDropDown": return 0;
+                case "occupancyDropDown":return _roomItems[0].Room.Occupancy;
+                default: return 0;
+            }            
+        }
 
         private void ProcessPackage(Package package, string hostName)
         {
