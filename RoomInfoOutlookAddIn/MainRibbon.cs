@@ -1,5 +1,6 @@
 ﻿using ApplicationServiceLibrary;
 using Microsoft.Office.Core;
+using Microsoft.Office.Tools.Ribbon;
 using ModelLibrary;
 using Newtonsoft.Json;
 using System;
@@ -93,7 +94,7 @@ namespace RoomInfoOutlookAddIn
             return null;
         }
 
-        #endregion
+        #endregion        
 
         public void OnChange(IRibbonControl control, string text)
         {
@@ -129,14 +130,9 @@ namespace RoomInfoOutlookAddIn
             }
         }
 
-        public void OnRoomsDropDownAction(IRibbonControl control)
+        public int GetItemCount(IRibbonControl control)
         {
-
-        }
-
-        public void OnOccupancyDropDownAction(IRibbonControl control)
-        {
-
+            return 5;
         }
 
         public void OnAction(IRibbonControl control)
@@ -148,9 +144,23 @@ namespace RoomInfoOutlookAddIn
                 case "recycleButton":
                     _networkCommunication.SendPayload("", null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
                     break;
+                case "roomsDropDown":
+                    break;
+                case "occupancyDropDown":
+                    break;
                 default:
                     break;
             }
+        }
+
+        public string GetItemLabel(IRibbonControl control, int index)
+        {
+            return index.ToString();
+        }
+
+        public string GetItemID(IRibbonControl control, int index)
+        {
+            return index.ToString();
         }
 
         private void ProcessPackage(Package package, string hostName)
@@ -167,7 +177,19 @@ namespace RoomInfoOutlookAddIn
                             RoomItems.RemoveAt(i);
                             break;
                         }
-                    }
+                    }                    
+
+                    //RibbonDropDown ribbonDropDown = null;
+                    //ribbonDropDown.Items.Clear();
+
+                    //foreach (var roomItem in RoomItems)
+                    //{
+                    //    RibbonDropDownItem ribbonDropDownItem = Globals.Factory.GetRibbonFactory().CreateRibbonDropDownItem();
+                    //    ribbonDropDownItem.Label = roomItem.Room.RoomNumber + roomItem.Room.RoomName;
+                    //    ribbonDropDown.Items.Add(ribbonDropDownItem);
+                    //}
+                    
+
                     break;
                 case PayloadType.Schedule:
                     AgendaItems = new List<AgendaItem>(JsonConvert.DeserializeObject<AgendaItem[]>(package.Payload.ToString()));

@@ -2,14 +2,12 @@
 <customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load">
   <ribbon>
     <tabs>
-      <tab idMso="TabAddIns" label="Roominfo Remote" >
+      <tab idMso="TabAddIns" label="Roominfo Remote">
         <group id="roomInfoRemoteRooms" label="Rooms">
-          <dropDown id="roomsDropDown" onAction="OnRoomsDropDownAction">
-            <item id="item1" label="Item 1" />
-            <item id="item2" label="Item 2" />
-            <item id="item3" label="Item 3" />
+          <dropDown id="roomsDropDown" onAction="OnDropDownAction" getItemCount="GetItemCount" getItemLabel="GetItemLabel">
+            
           </dropDown>
-          <dropDown id="occupancyDropDown" onAction="OnOccupancyDropDownAction">
+          <dropDown id="occupancyDropDown" onAction="OnDropDownAction">
             <item id="free" label="Free"/>
             <item id="present" label="Present" />
             <item id="absent" label="Absent" />
