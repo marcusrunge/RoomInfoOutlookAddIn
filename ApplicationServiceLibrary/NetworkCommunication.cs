@@ -123,7 +123,7 @@ namespace ApplicationServiceLibrary
                     using (StreamReader streamReader = new StreamReader(networkStream, Encoding.UTF8))
                     {
                         string response = await streamReader.ReadLineAsync();
-                        OnPayloadReceived(new PayloadReceivedEventArgs(((IPEndPoint)tcpClient.Client.RemoteEndPoint).Port.ToString(), response));
+                        OnPayloadReceived(new PayloadReceivedEventArgs(((IPEndPoint)tcpClient.Client.RemoteEndPoint).Address.ToString(), response));
                         streamReader.Close();
                         networkStream.Close();
                         tcpClient.Close();

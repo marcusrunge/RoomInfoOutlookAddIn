@@ -9,6 +9,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using static ModelLibrary.Enums;
 
 // TODO:  Führen Sie diese Schritte aus, um das Element auf dem Menüband (XML) zu aktivieren:
@@ -43,17 +44,18 @@ namespace RoomInfoOutlookAddIn
         private INetworkCommunication _networkCommunication;
 
         private List<RoomItem> _roomItems;
-        private List<AgendaItem> _agendaItems;
         private AgendaItem _agendaItem;
+        private int _selectedRoomId;
 
         public MainRibbon(INetworkCommunication networkCommunication)
         {
+            _selectedRoomId = 0;
             _networkCommunication = networkCommunication;
             _agendaItems = new List<AgendaItem>();
             _roomItems = new List<RoomItem>();
             _agendaItem = new AgendaItem();
             _networkCommunication.StartConnectionListener(Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
-            _networkCommunication.PayloadReceived += (s, e) => ProcessPackage(JsonConvert.DeserializeObject<Package>(e.Package), e.HostName);
+            _networkCommunication.PayloadReceived += async (s, e) => await ProcessPackage(JsonConvert.DeserializeObject<Package>(e.Package), e.HostName);
         }
 
         #region IRibbonExtensibility-Member
@@ -135,18 +137,35 @@ namespace RoomInfoOutlookAddIn
 
         public int GetItemCount(IRibbonControl control) => _roomItems != null ? _roomItems.Count : 0;
 
-        public void OnAction(IRibbonControl control)
+        public async void OnAction(IRibbonControl control)
         {
             switch (control.Id)
             {
                 case "agendaButton":
                     break;
                 case "recycleButton":
-                    _networkCommunication.SendPayload("", null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
+                    await _networkCommunication.SendPayload("", null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
                     break;
+                default:
+                    break;
+            }
+        }
+
+        public async void OnDropDownAction(IRibbonControl control, string itemID, int itemIndex)
+        {
+            switch (control.Id)
+            {
                 case "roomsDropDown":
+                    _selectedRoomId = itemIndex;
+                    ribbon.Invalidate();
                     break;
                 case "occupancyDropDown":
+                    if (_roomItems != null && _roomItems.Count >= _selectedRoomId + 1)
+                    {
+                        _roomItems[_selectedRoomId].Room.Occupancy = itemIndex;
+                        var package = new Package() { PayloadType = (int)PayloadType.Occupancy, Payload = itemIndex };
+                        await _networkCommunication.SendPayload(JsonConvert.SerializeObject(package), _roomItems[_selectedRoomId].HostName, Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
+                    }
                     break;
                 default:
                     break;
@@ -168,13 +187,13 @@ namespace RoomInfoOutlookAddIn
         {
             switch (control.Id)
             {
-                case "roomsDropDown": return 0;
-                case "occupancyDropDown":return _roomItems[0].Room.Occupancy;
+                case "roomsDropDown": return _selectedRoomId;
+                case "occupancyDropDown": return _roomItems != null && _roomItems.Count >= _selectedRoomId + 1 ? _roomItems[_selectedRoomId].Room.Occupancy : 0;
                 default: return 0;
-            }            
+            }
         }
 
-        private void ProcessPackage(Package package, string hostName)
+        private async Task ProcessPackage(Package package, string hostName)
         {
             switch ((PayloadType)package.PayloadType)
             {
@@ -190,10 +209,20 @@ namespace RoomInfoOutlookAddIn
                         }
                     }
                     _roomItems.Add(new RoomItem() { HostName = hostName, Room = room });
+                    package = new Package() { PayloadType = (int)PayloadType.RequestSchedule };
+                    await _networkCommunication.SendPayload(JsonConvert.SerializeObject(package), hostName, Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
                     ribbon.Invalidate();
                     break;
                 case PayloadType.Schedule:
-                    _agendaItems = new List<AgendaItem>(JsonConvert.DeserializeObject<AgendaItem[]>(package.Payload.ToString()));
+                    var agendaItems = new List<AgendaItem>(JsonConvert.DeserializeObject<AgendaItem[]>(package.Payload.ToString()));
+                    for (int i = 0; i < _roomItems.Count; i++)
+                    {
+                        if (_roomItems[i].HostName == hostName)
+                        {
+                            _roomItems[i].AgendaItems = agendaItems;
+                            break;
+                        }
+                    }
                     break;
                 case PayloadType.StandardWeek:
                     break;
