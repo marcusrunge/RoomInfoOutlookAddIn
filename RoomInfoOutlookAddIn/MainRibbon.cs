@@ -51,11 +51,13 @@ namespace RoomInfoOutlookAddIn
         {
             _selectedRoomId = 0;
             _networkCommunication = networkCommunication;
-            _agendaItems = new List<AgendaItem>();
             _roomItems = new List<RoomItem>();
             _agendaItem = new AgendaItem();
             _networkCommunication.StartConnectionListener(Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
-            _networkCommunication.PayloadReceived += async (s, e) => await ProcessPackage(JsonConvert.DeserializeObject<Package>(e.Package), e.HostName);
+            _networkCommunication.PayloadReceived += async (s, e) =>
+            {
+                if (e.Package != null) await ProcessPackage(JsonConvert.DeserializeObject<Package>(e.Package), e.HostName);
+            };
         }
 
         #region IRibbonExtensibility-Member
