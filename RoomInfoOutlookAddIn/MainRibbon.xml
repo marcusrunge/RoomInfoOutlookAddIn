@@ -5,16 +5,9 @@
       <tab idMso="TabAddIns" label="Roominfo Remote">
         <group id="roomInfoRemoteRooms" label="Rooms">
           <dropDown id="roomsDropDown" onAction="OnDropDownAction" getItemCount="GetItemCount" getItemLabel="GetItemLabel" getSelectedItemIndex="GetSelectedItemIndex"/>
-          <dropDown id="occupancyDropDown" onAction="OnDropDownAction" getSelectedItemIndex="GetSelectedItemIndex">
-            <item id="free" label="Free"/>
-            <item id="present" label="Present" />
-            <item id="absent" label="Absent" />
-            <item id="busy" label="Busy" />
-            <item id="occupied" label="Occupied" />
-            <item id="locked" label="Locked" />
-          </dropDown>
+          <dropDown id="occupancyDropDown" onAction="OnDropDownAction" getSelectedItemIndex="GetSelectedItemIndex" getItemCount="GetItemCount" getItemLabel="GetItemLabel"/>            
           <button id="agendaButton" label="Agenda" onAction="OnAction" />
-          <button id="recycleButton" label="Recycle" onAction="OnAction" />
+          <button id="recycleButton" label="Recycle" onAction="OnAction"/>
         </group>
       <group id="roomInfoRemoteSettings" label="Settings">
           <editBox id="tcpPort" onChange="OnChange" showLabel="true" label="TCP Port:" getText="OnGetText"/>

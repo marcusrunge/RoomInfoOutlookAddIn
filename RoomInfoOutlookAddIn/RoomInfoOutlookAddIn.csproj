@@ -187,10 +187,10 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="Resx\AppResources.de.resx" />
-    <EmbeddedResource Include="Resx\AppResources.resx">
+    <EmbeddedResource Include="Properties\LanguageResources.de-DE.resx" />
+    <EmbeddedResource Include="Properties\LanguageResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>AppResources.Designer.cs</LastGenOutput>
+      <LastGenOutput>LanguageResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="app.config" />
     <None Include="packages.config" />
@@ -203,10 +203,10 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Resx\AppResources.Designer.cs">
+    <Compile Include="Properties\LanguageResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>AppResources.resx</DependentUpon>
+      <DependentUpon>LanguageResources.resx</DependentUpon>
     </Compile>
     <Compile Include="ThisAddIn.cs">
       <SubType>Code</SubType>
@@ -233,6 +233,7 @@
       <Name>ModelLibrary</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -241,10 +242,10 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>RoomInfoOutlookAddIn_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>RoomInfoOutlookAddIn_1_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>B584D00EB7C8BD55DDCE30F0464FAC4430182B24</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>280BAD5CC2166347FC0240338AC892584087C7A6</ManifestCertificateThumbprint>
   </PropertyGroup>
   <!-- Include the build rules for a C# project. -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

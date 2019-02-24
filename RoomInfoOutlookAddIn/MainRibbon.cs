@@ -6,9 +6,12 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Resources;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using static ModelLibrary.Enums;
 
@@ -46,9 +49,13 @@ namespace RoomInfoOutlookAddIn
         private List<RoomItem> _roomItems;
         private AgendaItem _agendaItem;
         private int _selectedRoomId;
+        private ResourceManager _resourceManager;
 
         public MainRibbon(INetworkCommunication networkCommunication)
         {
+            var cultureInfo = Thread.CurrentThread.CurrentUICulture;
+            Properties.Resources.Culture = cultureInfo;
+            _resourceManager = Properties.LanguageResources.ResourceManager;
             _selectedRoomId = 0;
             _networkCommunication = networkCommunication;
             _roomItems = new List<RoomItem>();
@@ -137,7 +144,25 @@ namespace RoomInfoOutlookAddIn
             }
         }
 
-        public int GetItemCount(IRibbonControl control) => _roomItems != null ? _roomItems.Count : 0;
+        public string OnGetLabel(IRibbonControl control)
+        {
+            switch (control.Id)
+            {
+                case "recycleButton": return _resourceManager.GetString("RecycleButton_Label");
+                default: return "";
+            }
+        }
+
+        public int GetItemCount(IRibbonControl control)
+        {
+            switch (control.Id)
+            {
+                case "roomsDropDown": return _roomItems != null ? _roomItems.Count : 0;
+                case "occupancyDropDown": return 6;
+                default: return 0;
+            }
+
+        }
 
         public async void OnAction(IRibbonControl control)
         {
@@ -176,11 +201,27 @@ namespace RoomInfoOutlookAddIn
 
         public string GetItemLabel(IRibbonControl control, int index)
         {
-            var roomNumber = _roomItems[index].Room.RoomNumber;
-            var roomName = _roomItems[index].Room.RoomName;
-            return !(string.IsNullOrEmpty(roomNumber) || string.IsNullOrWhiteSpace(roomNumber))
-                ? !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName + " " + roomNumber : roomNumber
-                : !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName : "";
+            switch (control.Id)
+            {
+                case "roomsDropDown":
+                    var roomNumber = _roomItems[index].Room.RoomNumber;
+                    var roomName = _roomItems[index].Room.RoomName;
+                    return !(string.IsNullOrEmpty(roomNumber) || string.IsNullOrWhiteSpace(roomNumber))
+                        ? !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName + " " + roomNumber : roomNumber
+                        : !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName : "";
+                case "occupancyDropDown":
+                    switch (index)
+                    {
+                        case 0: return _resourceManager.GetString("DropDown_ItemLabel_Occupancy_Free");
+                        case 1: return _resourceManager.GetString("DropDown_ItemLabel_Occupancy_Present");
+                        case 2: return _resourceManager.GetString("DropDown_ItemLabel_Occupancy_Absent");
+                        case 3: return _resourceManager.GetString("DropDown_ItemLabel_Occupancy_Busy");
+                        case 4: return _resourceManager.GetString("DropDown_ItemLabel_Occupancy_Occupied");
+                        case 5: return _resourceManager.GetString("DropDown_ItemLabel_Occupancy_Locked");
+                        default: return "";
+                    }
+                default: return "";
+            }
         }
 
         public string GetItemID(IRibbonControl control, int index) => _roomItems[index].Room.RoomGuid;
