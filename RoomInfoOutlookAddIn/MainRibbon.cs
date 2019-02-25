@@ -45,19 +45,22 @@ namespace RoomInfoOutlookAddIn
     {
         private IRibbonUI ribbon;
         private INetworkCommunication _networkCommunication;
+        IEventService _eventService;
 
         private List<RoomItem> _roomItems;
         private AgendaItem _agendaItem;
         private int _selectedRoomId;
         private ResourceManager _resourceManager;
+        private event EventHandler AddButtonPressed;
 
-        public MainRibbon(INetworkCommunication networkCommunication)
+        public MainRibbon(INetworkCommunication networkCommunication, IEventService eventService)
         {
             var cultureInfo = Thread.CurrentThread.CurrentUICulture;
             Properties.Resources.Culture = cultureInfo;
             _resourceManager = Properties.LanguageResources.ResourceManager;
             _selectedRoomId = 0;
             _networkCommunication = networkCommunication;
+            _eventService = eventService;
             _roomItems = new List<RoomItem>();
             _agendaItem = new AgendaItem();
             _networkCommunication.StartConnectionListener(Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
@@ -173,6 +176,9 @@ namespace RoomInfoOutlookAddIn
                     break;
                 case "recycleButton":
                     await _networkCommunication.SendPayload("", null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
+                    break;
+                case "addButton":
+                    if (_roomItems != null && _roomItems.Count > 0) _eventService.OnAddButtonPressed(_roomItems[_selectedRoomId]);
                     break;
                 default:
                     break;

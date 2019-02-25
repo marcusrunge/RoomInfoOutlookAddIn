@@ -15,6 +15,9 @@
           <editBox id="tcpPort" onChange="OnChange" showLabel="true" label="TCP Port:" getText="OnGetText"/>
           <editBox id="udpPort" onChange="OnChange" showLabel="true" label="UDP Port:" getText="OnGetText"/>
         </group>
+        <group id="add" label="Add">
+          <button id="addButton" size="large" label="Add" onAction="OnAction"/>
+        </group>
       </tab>
     </tabs>
   </ribbon>

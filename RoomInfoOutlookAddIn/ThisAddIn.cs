@@ -11,11 +11,38 @@ namespace RoomInfoOutlookAddIn
 {
     public partial class ThisAddIn
     {
-        IUnityContainer _unityContainer;        
+        IUnityContainer _unityContainer;
+        IEventService _eventService;
 
         private void ThisAddIn_Startup(object sender, EventArgs e)
         {
+            Outlook.MAPIFolder calendar = Application.Session.GetDefaultFolder(Outlook.OlDefaultFolders.olFolderCalendar);            
+            Outlook.Items calendarItems = calendar.Items;
+            calendarItems.ItemAdd += CalendarItems_ItemAdd;
+            calendarItems.ItemChange += CalendarItems_ItemChange;
+            calendarItems.ItemRemove += CalendarItems_ItemRemove;
+            _eventService = _unityContainer.Resolve<IEventService>();
+            _eventService.AddButtonPressed += ThisAddIn_AddButtonPressed;
+        }
 
+        private void ThisAddIn_AddButtonPressed(object sender, RoomItem roomItem)
+        {
+            
+        }
+
+        private void CalendarItems_ItemRemove()
+        {
+            
+        }
+
+        private void CalendarItems_ItemChange(object Item)
+        {
+            
+        }
+
+        private void CalendarItems_ItemAdd(object Item)
+        {
+            
         }
 
         private void ThisAddIn_Shutdown(object sender, EventArgs e)
@@ -42,7 +69,8 @@ namespace RoomInfoOutlookAddIn
         {
             _unityContainer = new UnityContainer();
             _unityContainer.RegisterSingleton<IMainRibbon, MainRibbon>();
-            _unityContainer.RegisterSingleton<INetworkCommunication, NetworkCommunication>();            
+            _unityContainer.RegisterSingleton<INetworkCommunication, NetworkCommunication>();
+            _unityContainer.RegisterSingleton<IEventService, EventService>();
             Outlook.Application outlookApplication = GetHostItem<Outlook.Application>(typeof(Outlook.Application), "Application");
             int languageID = outlookApplication.LanguageSettings.get_LanguageID(MsoAppLanguageID.msoLanguageIDUI);
             Thread.CurrentThread.CurrentUICulture = new CultureInfo(languageID);
