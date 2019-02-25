@@ -138,4 +138,7 @@
   <data name="RecycleButton_Label" xml:space="preserve">
     <value>Aktualisieren</value>
   </data>
+  <data name="Tab_Label" xml:space="preserve">
+    <value>Rauminfo</value>
+  </data>
 </root>

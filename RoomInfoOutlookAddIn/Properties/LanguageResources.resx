@@ -138,4 +138,7 @@
   <data name="RecycleButton_Label" xml:space="preserve">
     <value>Recycle</value>
   </data>
+  <data name="Tab_Label" xml:space="preserve">
+    <value>Roominfo</value>
+  </data>
 </root>

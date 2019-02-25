@@ -2,18 +2,20 @@
 <customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load">
   <ribbon>
     <tabs>
-      <tab idMso="TabAddIns" label="Roominfo Remote">
-        <group id="roomInfoRemoteRooms" label="Rooms">
-          <dropDown id="roomsDropDown" onAction="OnDropDownAction" getItemCount="GetItemCount" getItemLabel="GetItemLabel" getSelectedItemIndex="GetSelectedItemIndex"/>
-          <dropDown id="occupancyDropDown" onAction="OnDropDownAction" getSelectedItemIndex="GetSelectedItemIndex" getItemCount="GetItemCount" getItemLabel="GetItemLabel"/>            
-          <button id="agendaButton" label="Agenda" onAction="OnAction" />
-          <button id="recycleButton" label="Recycle" onAction="OnAction"/>
+      <tab id="MainTab" getLabel="OnGetLabel" >
+        <group id="roomInfoRemoteRooms" label="Rooms" >
+          <dropDown id="roomsDropDown" onAction="OnDropDownAction" getItemCount="GetItemCount" getItemLabel="GetItemLabel" getSelectedItemIndex="GetSelectedItemIndex" sizeString="ABCDEFGHIJKLMNOPQ"/>
+          <dropDown id="occupancyDropDown" onAction="OnDropDownAction" getSelectedItemIndex="GetSelectedItemIndex" getItemCount="GetItemCount" getItemLabel="GetItemLabel" sizeString="ABCDEFGHIJKLMNOPQ"/>
+          <box id="buttonBox" boxStyle="horizontal">
+            <button id="agendaButton" label="Agenda" onAction="OnAction" />
+            <button id="recycleButton" onAction="OnAction" getLabel="OnGetLabel"/>
+          </box>
         </group>
-      <group id="roomInfoRemoteSettings" label="Settings">
+        <group id="roomInfoRemoteSettings" label="Settings">
           <editBox id="tcpPort" onChange="OnChange" showLabel="true" label="TCP Port:" getText="OnGetText"/>
           <editBox id="udpPort" onChange="OnChange" showLabel="true" label="UDP Port:" getText="OnGetText"/>
         </group>
-      </tab>      
+      </tab>
     </tabs>
   </ribbon>
 </customUI>

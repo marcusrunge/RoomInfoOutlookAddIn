@@ -148,6 +148,7 @@ namespace RoomInfoOutlookAddIn
         {
             switch (control.Id)
             {
+                case "MainTab": return _resourceManager.GetString("Tab_Label");
                 case "recycleButton": return _resourceManager.GetString("RecycleButton_Label");
                 default: return "";
             }

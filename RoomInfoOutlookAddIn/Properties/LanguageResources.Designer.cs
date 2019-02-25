@@ -122,5 +122,14 @@ namespace RoomInfoOutlookAddIn.Properties {
                 return ResourceManager.GetString("RecycleButton_Label", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Roominfo ähnelt.
+        /// </summary>
+        internal static string Tab_Label {
+            get {
+                return ResourceManager.GetString("Tab_Label", resourceCulture);
+            }
+        }
     }
 }
