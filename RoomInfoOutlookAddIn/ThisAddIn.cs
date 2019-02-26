@@ -6,6 +6,14 @@ using Unity;
 using Microsoft.Office.Core;
 using ApplicationServiceLibrary;
 using ModelLibrary;
+using static ModelLibrary.Enums;
+using Newtonsoft.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Collections;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 namespace RoomInfoOutlookAddIn
 {
@@ -13,36 +21,122 @@ namespace RoomInfoOutlookAddIn
     {
         IUnityContainer _unityContainer;
         IEventService _eventService;
+        INetworkCommunication _networkCommunication;
+        IList<RoomItem> _roomItems;
+        Outlook.AppointmentItem _appointmentItem;
+        Outlook.Items _calendarItems;
+        bool _isProcessingPackage;
 
-        private void ThisAddIn_Startup(object sender, EventArgs e)
+        private async void ThisAddIn_Startup(object sender, EventArgs e)
         {
-            Outlook.MAPIFolder calendar = Application.Session.GetDefaultFolder(Outlook.OlDefaultFolders.olFolderCalendar);            
-            Outlook.Items calendarItems = calendar.Items;
-            calendarItems.ItemAdd += CalendarItems_ItemAdd;
-            calendarItems.ItemChange += CalendarItems_ItemChange;
-            calendarItems.ItemRemove += CalendarItems_ItemRemove;
+            Outlook.MAPIFolder calendar = Application.Session.GetDefaultFolder(Outlook.OlDefaultFolders.olFolderCalendar);
+            _calendarItems = calendar.Items;
+            _calendarItems.ItemAdd += CalendarItems_ItemAdd;
+            _calendarItems.ItemChange += CalendarItems_ItemChange;
+            _calendarItems.ItemRemove += CalendarItems_ItemRemove;
             _eventService = _unityContainer.Resolve<IEventService>();
+            _networkCommunication = _unityContainer.Resolve<INetworkCommunication>();
+            _roomItems = _unityContainer.Resolve<IList<RoomItem>>();
             _eventService.AddButtonPressed += ThisAddIn_AddButtonPressed;
-        }
-
-        private void ThisAddIn_AddButtonPressed(object sender, RoomItem roomItem)
-        {
-            
+            _eventService.SyncButtonPressed += _eventService_SyncButtonPressed;
+            await _networkCommunication.StartConnectionListener(Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
+            _networkCommunication.PayloadReceived += async (s, ea) =>
+            {
+                if (ea.Package != null) await ProcessPackage(JsonConvert.DeserializeObject<Package>(ea.Package), ea.HostName);
+            };
+            await _networkCommunication.SendPayload("", null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
         }
 
         private void CalendarItems_ItemRemove()
-        {
+        {            
             
         }
 
-        private void CalendarItems_ItemChange(object Item)
+        private void _eventService_SyncButtonPressed(object sender, RoomItem roomItem)
         {
-            
+            throw new NotImplementedException();
         }
 
-        private void CalendarItems_ItemAdd(object Item)
+        private async void ThisAddIn_AddButtonPressed(object sender, RoomItem roomItem)
         {
-            
+            await _networkCommunication.SendPayload("", null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
+            try
+            {
+                var roomNumber = roomItem.Room.RoomNumber;
+                var roomName = roomItem.Room.RoomName;
+                Outlook.AppointmentItem newAppointment = (Outlook.AppointmentItem)this.Application.CreateItem(Outlook.OlItemType.olAppointmentItem);
+                newAppointment.Location = !(string.IsNullOrEmpty(roomNumber) || string.IsNullOrWhiteSpace(roomNumber))
+                    ? !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName + " " + roomNumber : roomNumber
+                    : !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName : "";
+                newAppointment.Resources = roomItem.Room.RoomGuid;
+                var propertyAccessor = newAppointment.PropertyAccessor;
+                var userProperty = newAppointment.UserProperties.Add("RemoteDbEntityId", Outlook.OlUserPropertyType.olInteger);
+                userProperty.Value = 0;
+                newAppointment.Display();
+            }
+            catch (Exception)
+            {
+
+            }
+        }        
+
+        private async void CalendarItems_ItemChange(object Item)
+        {
+            if (_isProcessingPackage)
+            {
+                _isProcessingPackage = false;
+                return;
+            }
+            _appointmentItem = Item as Outlook.AppointmentItem;
+            await TransmitAgendaItem(_appointmentItem);
+        }
+
+        private async Task TransmitAgendaItem(Outlook.AppointmentItem appointmentItem)
+        {            
+            string hostName = GetHostName(_roomItems, appointmentItem);
+            var agendaItem = new AgendaItem()
+            {
+                Id = appointmentItem.UserProperties.Find("RemoteDbEntityId").Value,
+                Description = appointmentItem.Body,
+                End = appointmentItem.End,
+                IsAllDayEvent = appointmentItem.AllDayEvent,
+                Start = appointmentItem.Start,
+                Title = appointmentItem.Subject,
+                Occupancy = 3
+            };
+            string guid = GetGuid(appointmentItem.Resources);
+            var agendaItems = _roomItems.Where(x => x.Room.RoomGuid.Equals(guid)).Select(x => x.AgendaItems).FirstOrDefault();
+            if (agendaItems != null)
+            {
+                var actualAgendaItem = agendaItems.Where(x => x.Id == agendaItem.Id).Select(x => x).FirstOrDefault();
+                if (actualAgendaItem != null && actualAgendaItem == agendaItem) return;
+                var package = new Package() { PayloadType = (int)PayloadType.AgendaItem, Payload = agendaItem };
+                await _networkCommunication.SendPayload(JsonConvert.SerializeObject(package), hostName, Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
+            }
+        }
+
+        private string GetHostName(IList<RoomItem> roomItems, Outlook.AppointmentItem appointmentItem)
+        {
+            string guid = GetGuid(appointmentItem.Resources);
+            return roomItems.Where(x => x.Room.RoomGuid.Equals(guid)).Select(x => x.HostName).FirstOrDefault();
+        }
+
+        private string GetGuid(string appointmentItemResources)
+        {
+            string guidRegEx = @"[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}";
+            var resources = appointmentItemResources.Split(';');
+            foreach (var resource in resources)
+            {
+                if (Regex.IsMatch(resource, guidRegEx)) return resource;
+            }
+            return null;
+        }
+
+
+        private async void CalendarItems_ItemAdd(object Item)
+        {
+            _appointmentItem = Item as Outlook.AppointmentItem;
+            await TransmitAgendaItem(_appointmentItem);
         }
 
         private void ThisAddIn_Shutdown(object sender, EventArgs e)
@@ -67,14 +161,50 @@ namespace RoomInfoOutlookAddIn
 
         protected override IRibbonExtensibility CreateRibbonExtensibilityObject()
         {
+            _isProcessingPackage = false;
             _unityContainer = new UnityContainer();
             _unityContainer.RegisterSingleton<IMainRibbon, MainRibbon>();
             _unityContainer.RegisterSingleton<INetworkCommunication, NetworkCommunication>();
             _unityContainer.RegisterSingleton<IEventService, EventService>();
+            _unityContainer.RegisterSingleton<IList<RoomItem>, List<RoomItem>>();
             Outlook.Application outlookApplication = GetHostItem<Outlook.Application>(typeof(Outlook.Application), "Application");
             int languageID = outlookApplication.LanguageSettings.get_LanguageID(MsoAppLanguageID.msoLanguageIDUI);
             Thread.CurrentThread.CurrentUICulture = new CultureInfo(languageID);
             return _unityContainer.Resolve<IMainRibbon>();
+        }
+
+        private Task ProcessPackage(Package package, string hostName)
+        {
+            _isProcessingPackage = true;
+            switch ((PayloadType)package.PayloadType)
+            {
+                case PayloadType.Occupancy:
+                    break;
+                case PayloadType.Room:
+                    break;
+                case PayloadType.Schedule:
+                    break;
+                case PayloadType.StandardWeek:
+                    break;
+                case PayloadType.RequestOccupancy:
+                    break;
+                case PayloadType.RequestSchedule:
+                    break;
+                case PayloadType.RequestStandardWeek:
+                    break;
+                case PayloadType.IotDim:
+                    break;
+                case PayloadType.AgendaItem:
+                    break;
+                case PayloadType.AgendaItemId:
+                    var userProperty = _appointmentItem.UserProperties.Find("RemoteDbEntityId");
+                    if (userProperty != null) userProperty.Value = (int)Convert.ChangeType(package.Payload, typeof(int));
+                    _appointmentItem.Save();
+                    break;
+                default:
+                    break;
+            }
+            return Task.CompletedTask;
         }
     }
 }
