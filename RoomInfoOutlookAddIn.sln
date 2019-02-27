@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationServiceLibrary",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelLibrary", "ModelLibrary\ModelLibrary.csproj", "{13314656-EDC6-44BE-A713-B316C7FB4452}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "RoomInfoOutlookAddinSetup", "RoomInfoOutlookAddinSetup\RoomInfoOutlookAddinSetup.vdproj", "{D08C2F82-936A-4155-958A-6FF0C4CE5FA8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,8 @@ Global
 		{13314656-EDC6-44BE-A713-B316C7FB4452}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{13314656-EDC6-44BE-A713-B316C7FB4452}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{13314656-EDC6-44BE-A713-B316C7FB4452}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D08C2F82-936A-4155-958A-6FF0C4CE5FA8}.Debug|Any CPU.ActiveCfg = Debug
+		{D08C2F82-936A-4155-958A-6FF0C4CE5FA8}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

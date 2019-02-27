@@ -24,6 +24,7 @@ namespace RoomInfoOutlookAddIn
         Outlook.AppointmentItem _appointmentItem;
         Outlook.Items _calendarItems;
         bool _isProcessingPackage;
+        Package _discoveryPackage;
 
         private async void ThisAddIn_Startup(object sender, EventArgs e)
         {
@@ -42,12 +43,12 @@ namespace RoomInfoOutlookAddIn
             {
                 if (ea.Package != null) await ProcessPackage(JsonConvert.DeserializeObject<Package>(ea.Package), ea.HostName);
             };
-            await _networkCommunication.SendPayload("", null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
+            await _networkCommunication.SendPayload(JsonConvert.SerializeObject(_discoveryPackage), null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
         }
 
         private async void CalendarItems_ItemRemove()
         {
-            await _networkCommunication.SendPayload("", null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
+            await _networkCommunication.SendPayload(JsonConvert.SerializeObject(_discoveryPackage), null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
             try
             {
                 foreach (var roomItem in _roomItems)
@@ -88,7 +89,7 @@ namespace RoomInfoOutlookAddIn
 
         private async void _eventService_SyncButtonPressed(object sender, RoomItem roomItem)
         {
-            await _networkCommunication.SendPayload("", null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
+            await _networkCommunication.SendPayload(JsonConvert.SerializeObject(_discoveryPackage), null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
             //TODO
         }
 
@@ -156,6 +157,7 @@ namespace RoomInfoOutlookAddIn
 
         protected override IRibbonExtensibility CreateRibbonExtensibilityObject()
         {
+            _discoveryPackage = new Package() { PayloadType = (int)PayloadType.Discovery };
             _isProcessingPackage = false;
             _unityContainer = new UnityContainer();
             _unityContainer.RegisterSingleton<IMainRibbon, MainRibbon>();
@@ -195,34 +197,37 @@ namespace RoomInfoOutlookAddIn
         private Task ProcessPackage(Package package, string hostName)
         {
             _isProcessingPackage = true;
-            switch ((PayloadType)package.PayloadType)
+            if (package != null)
             {
-                case PayloadType.Occupancy:
-                    break;
-                case PayloadType.Room:
-                    break;
-                case PayloadType.Schedule:
-                    break;
-                case PayloadType.StandardWeek:
-                    break;
-                case PayloadType.RequestOccupancy:
-                    break;
-                case PayloadType.RequestSchedule:
-                    break;
-                case PayloadType.RequestStandardWeek:
-                    break;
-                case PayloadType.IotDim:
-                    break;
-                case PayloadType.AgendaItem:
-                    break;
-                case PayloadType.AgendaItemId:
-                    var userProperty = _appointmentItem.UserProperties.Find("RemoteDbEntityId");
-                    if (userProperty != null) userProperty.Value = (int)Convert.ChangeType(package.Payload, typeof(int));
-                    _appointmentItem.Save();
-                    break;
-                default:
-                    break;
-            }
+                switch ((PayloadType)package.PayloadType)
+                {
+                    case PayloadType.Occupancy:
+                        break;
+                    case PayloadType.Room:
+                        break;
+                    case PayloadType.Schedule:
+                        break;
+                    case PayloadType.StandardWeek:
+                        break;
+                    case PayloadType.RequestOccupancy:
+                        break;
+                    case PayloadType.RequestSchedule:
+                        break;
+                    case PayloadType.RequestStandardWeek:
+                        break;
+                    case PayloadType.IotDim:
+                        break;
+                    case PayloadType.AgendaItem:
+                        break;
+                    case PayloadType.AgendaItemId:
+                        var userProperty = _appointmentItem.UserProperties.Find("RemoteDbEntityId");
+                        if (userProperty != null) userProperty.Value = (int)Convert.ChangeType(package.Payload, typeof(int));
+                        _appointmentItem.Save();
+                        break;
+                    default:
+                        break;
+                }
+            }            
             return Task.CompletedTask;
         }
 

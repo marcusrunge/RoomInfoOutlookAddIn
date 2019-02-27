@@ -48,9 +48,11 @@ namespace RoomInfoOutlookAddIn
         private AgendaItem _agendaItem;
         private int _selectedRoomId;
         private ResourceManager _resourceManager;
+        Package _discoveryPackage;
 
         public MainRibbon(INetworkCommunication networkCommunication, IEventService eventService, IList<RoomItem> roomItems)
         {
+            _discoveryPackage = new Package() { PayloadType = (int)PayloadType.Discovery };
             var cultureInfo = Thread.CurrentThread.CurrentUICulture;
             Properties.Resources.Culture = cultureInfo;
             _resourceManager = Properties.LanguageResources.ResourceManager;
@@ -171,7 +173,7 @@ namespace RoomInfoOutlookAddIn
                 case "agendaButton":
                     break;
                 case "recycleButton":
-                    await _networkCommunication.SendPayload("", null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
+                    await _networkCommunication.SendPayload(JsonConvert.SerializeObject(_discoveryPackage), null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
                     break;
                 case "addButton":
                     if (_roomItems != null && _roomItems.Count > 0) _eventService.OnAddButtonPressed(_roomItems[_selectedRoomId]);
@@ -244,42 +246,45 @@ namespace RoomInfoOutlookAddIn
 
         private async Task ProcessPackage(Package package, string hostName)
         {
-            switch ((PayloadType)package.PayloadType)
+            if (package != null)
             {
-                case PayloadType.Room:
-                    if (_roomItems == null) _roomItems = new List<RoomItem>();
-                    var room = JsonConvert.DeserializeObject<Room>(package.Payload.ToString());
-                    for (int i = 0; i < _roomItems.Count; i++)
-                    {
-                        if (_roomItems[i].Room.RoomGuid.Equals(room.RoomGuid))
+                switch ((PayloadType)package.PayloadType)
+                {
+                    case PayloadType.Room:
+                        if (_roomItems == null) _roomItems = new List<RoomItem>();
+                        var room = JsonConvert.DeserializeObject<Room>(package.Payload.ToString());
+                        for (int i = 0; i < _roomItems.Count; i++)
                         {
-                            _roomItems.RemoveAt(i);
-                            break;
+                            if (_roomItems[i].Room.RoomGuid.Equals(room.RoomGuid))
+                            {
+                                _roomItems.RemoveAt(i);
+                                break;
+                            }
                         }
-                    }
-                    _roomItems.Add(new RoomItem() { HostName = hostName, Room = room });
-                    package = new Package() { PayloadType = (int)PayloadType.RequestSchedule };
-                    await _networkCommunication.SendPayload(JsonConvert.SerializeObject(package), hostName, Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
-                    ribbon.Invalidate();
-                    break;
-                case PayloadType.Schedule:
-                    var agendaItems = new List<AgendaItem>(JsonConvert.DeserializeObject<AgendaItem[]>(package.Payload.ToString()));
-                    for (int i = 0; i < _roomItems.Count; i++)
-                    {
-                        if (_roomItems[i].HostName == hostName)
+                        _roomItems.Add(new RoomItem() { HostName = hostName, Room = room });
+                        package = new Package() { PayloadType = (int)PayloadType.RequestSchedule };
+                        await _networkCommunication.SendPayload(JsonConvert.SerializeObject(package), hostName, Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
+                        ribbon.Invalidate();
+                        break;
+                    case PayloadType.Schedule:
+                        var agendaItems = new List<AgendaItem>(JsonConvert.DeserializeObject<AgendaItem[]>(package.Payload.ToString()));
+                        for (int i = 0; i < _roomItems.Count; i++)
                         {
-                            _roomItems[i].AgendaItems = agendaItems;
-                            break;
+                            if (_roomItems[i].HostName == hostName)
+                            {
+                                _roomItems[i].AgendaItems = agendaItems;
+                                break;
+                            }
                         }
-                    }
-                    break;
-                case PayloadType.StandardWeek:
-                    break;
-                case PayloadType.AgendaItemId:
-                    _agendaItem.Id = (int)Convert.ChangeType(package.Payload, typeof(int));
-                    break;
-                default:
-                    break;
+                        break;
+                    case PayloadType.StandardWeek:
+                        break;
+                    case PayloadType.AgendaItemId:
+                        _agendaItem.Id = (int)Convert.ChangeType(package.Payload, typeof(int));
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }
