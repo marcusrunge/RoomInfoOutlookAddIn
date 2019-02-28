@@ -282,6 +282,10 @@ namespace RoomInfoOutlookAddIn
                     case PayloadType.AgendaItemId:
                         _agendaItem.Id = (int)Convert.ChangeType(package.Payload, typeof(int));
                         break;
+                    case PayloadType.Discovery:
+                        break;
+                    case PayloadType.PropertyChanged:
+                        break;
                     default:
                         break;
                 }

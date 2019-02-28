@@ -23,13 +23,14 @@ namespace RoomInfoOutlookAddIn
         IList<RoomItem> _roomItems;
         Outlook.AppointmentItem _appointmentItem;
         Outlook.Items _calendarItems;
+        Outlook.MAPIFolder _calendar;
         bool _isProcessingPackage;
         Package _discoveryPackage;
 
         private async void ThisAddIn_Startup(object sender, EventArgs e)
         {
-            Outlook.MAPIFolder calendar = Application.Session.GetDefaultFolder(Outlook.OlDefaultFolders.olFolderCalendar);
-            _calendarItems = calendar.Items;
+            _calendar = CreateCustomCalendarIfNotExists("RoomInfoCalendar");
+            _calendarItems = _calendar.Items;
             _calendarItems.ItemAdd += CalendarItems_ItemAdd;
             _calendarItems.ItemChange += CalendarItems_ItemChange;
             _calendarItems.ItemRemove += CalendarItems_ItemRemove;
@@ -84,7 +85,7 @@ namespace RoomInfoOutlookAddIn
             catch (Exception)
             {
 
-            }            
+            }
         }
 
         private async void _eventService_SyncButtonPressed(object sender, RoomItem roomItem)
@@ -100,7 +101,7 @@ namespace RoomInfoOutlookAddIn
             {
                 var roomNumber = roomItem.Room.RoomNumber;
                 var roomName = roomItem.Room.RoomName;
-                Outlook.AppointmentItem newAppointment = (Outlook.AppointmentItem)this.Application.CreateItem(Outlook.OlItemType.olAppointmentItem);
+                Outlook.AppointmentItem newAppointment = _calendar.Items.Add(Outlook.OlItemType.olAppointmentItem) as Outlook.AppointmentItem;
                 newAppointment.Location = !(string.IsNullOrEmpty(roomNumber) || string.IsNullOrWhiteSpace(roomNumber))
                     ? !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName + " " + roomNumber : roomNumber
                     : !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName : "";
@@ -127,7 +128,7 @@ namespace RoomInfoOutlookAddIn
             await TransmitAgendaItem(_appointmentItem);
             var schedulePackage = new Package() { PayloadType = (int)PayloadType.RequestSchedule };
             await _networkCommunication.SendPayload(JsonConvert.SerializeObject(schedulePackage), GetHostName(_roomItems, _appointmentItem), Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
-        }        
+        }
 
         private async void CalendarItems_ItemAdd(object Item)
         {
@@ -224,10 +225,14 @@ namespace RoomInfoOutlookAddIn
                         if (userProperty != null) userProperty.Value = (int)Convert.ChangeType(package.Payload, typeof(int));
                         _appointmentItem.Save();
                         break;
+                    case PayloadType.Discovery:
+                        break;
+                    case PayloadType.PropertyChanged:
+                        break;
                     default:
                         break;
                 }
-            }            
+            }
             return Task.CompletedTask;
         }
 
@@ -246,6 +251,16 @@ namespace RoomInfoOutlookAddIn
                 if (Regex.IsMatch(resource, guidRegEx)) return resource;
             }
             return null;
+        }
+
+        private Outlook.MAPIFolder CreateCustomCalendarIfNotExists(string calendarName)
+        {
+            Outlook.MAPIFolder primaryCalendar = Application.ActiveExplorer().Session.GetDefaultFolder(Outlook.OlDefaultFolders.olFolderCalendar);
+            foreach (Outlook.MAPIFolder personalCalendar in primaryCalendar.Folders)
+            {
+                if (personalCalendar.Name == calendarName) return personalCalendar;
+            }
+            return primaryCalendar.Folders.Add(calendarName, Outlook.OlDefaultFolders.olFolderCalendar);
         }
     }
 }
