@@ -108,9 +108,9 @@ namespace RoomInfoOutlookAddIn
                     : !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName : "";
                 newAppointment.Resources = roomItem.Room.RoomGuid;
                 var remoteDbEntityId = newAppointment.UserProperties.Add("RemoteDbEntityId", Outlook.OlUserPropertyType.olInteger);
-                var remoteDbEntityTimeStamp = newAppointment.UserProperties.Add("RemoteDbEntityTimeStamp", Outlook.OlUserPropertyType.olDuration);
+                //var remoteDbEntityTimeStamp = newAppointment.UserProperties.Add("RemoteDbEntityTimeStamp", Outlook.OlUserPropertyType.olDuration);
                 remoteDbEntityId.Value = 0;
-                remoteDbEntityTimeStamp.Value = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                //remoteDbEntityTimeStamp.Value = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 newAppointment.Display();
             }
             catch (Exception)
@@ -129,8 +129,8 @@ namespace RoomInfoOutlookAddIn
             }
             _appointmentItem = Item as Outlook.AppointmentItem;
             await TransmitAgendaItem(_appointmentItem);
-            var schedulePackage = new Package() { PayloadType = (int)PayloadType.RequestSchedule };
-            await _networkCommunication.SendPayload(JsonConvert.SerializeObject(schedulePackage), GetHostName(_roomItems, _appointmentItem), Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
+            //var schedulePackage = new Package() { PayloadType = (int)PayloadType.RequestSchedule };
+            //await _networkCommunication.SendPayload(JsonConvert.SerializeObject(schedulePackage), GetHostName(_roomItems, _appointmentItem), Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
         }
 
         private async void CalendarItems_ItemAdd(object Item)
@@ -194,7 +194,17 @@ namespace RoomInfoOutlookAddIn
             if (agendaItems != null)
             {
                 var actualAgendaItem = agendaItems.Where(x => x.Id == agendaItem.Id).Select(x => x).FirstOrDefault();
-                if (actualAgendaItem != null && actualAgendaItem.Equals(agendaItem)) return;
+                if (actualAgendaItem != null &&
+                    actualAgendaItem.IsAllDayEvent == agendaItem.IsAllDayEvent &&
+                    actualAgendaItem.Occupancy == agendaItem.Occupancy &&
+                    actualAgendaItem.Start == agendaItem.Start &&
+                    //actualAgendaItem.TimeStamp == agendaItem.TimeStamp &&
+                    actualAgendaItem.Title == agendaItem.Title &&
+                    actualAgendaItem.Description == agendaItem.Description &&
+                    actualAgendaItem.End == agendaItem.End)
+                    return;
+
+
                 var package = new Package() { PayloadType = (int)PayloadType.AgendaItem, Payload = agendaItem };
                 await _networkCommunication.SendPayload(JsonConvert.SerializeObject(package), hostName, Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
             }
@@ -243,12 +253,14 @@ namespace RoomInfoOutlookAddIn
 
         private string GetHostName(IList<RoomItem> roomItems, Outlook.AppointmentItem appointmentItem)
         {
+            if (appointmentItem == null || roomItems == null) return null;
             string guid = GetGuid(appointmentItem.Resources);
             return roomItems.Where(x => x.Room.RoomGuid.Equals(guid)).Select(x => x.HostName).FirstOrDefault();
         }
 
         private string GetGuid(string appointmentItemResources)
         {
+            if (appointmentItemResources == null) return null;
             string guidRegEx = @"[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}";
             var resources = appointmentItemResources.Split(';');
             foreach (var resource in resources)
