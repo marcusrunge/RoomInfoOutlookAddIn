@@ -242,10 +242,11 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>RoomInfoOutlookAddIn_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>65931F6000D1548381705F96641ACA0259D745EE</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>54DEBE15BDF5AAD2B8638D8FC30F07E55A95BD8F</ManifestCertificateThumbprint>
   </PropertyGroup>
   <!-- Include the build rules for a C# project. -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

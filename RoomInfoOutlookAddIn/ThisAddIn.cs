@@ -22,18 +22,17 @@ namespace RoomInfoOutlookAddIn
         INetworkCommunication _networkCommunication;
         IList<RoomItem> _roomItems;
         Outlook.AppointmentItem _appointmentItem;
-        Outlook.Items _calendarItems;
         Outlook.MAPIFolder _calendar;
         bool _isProcessingPackage;
         Package _discoveryPackage;
+        bool _isSyncInProgress;
 
         private async void ThisAddIn_Startup(object sender, EventArgs e)
         {
             _calendar = CreateCustomCalendarIfNotExists("RoomInfoCalendar");
-            _calendarItems = _calendar.Items;
-            _calendarItems.ItemAdd += CalendarItems_ItemAdd;
-            _calendarItems.ItemChange += CalendarItems_ItemChange;
-            _calendarItems.ItemRemove += CalendarItems_ItemRemove;
+            _calendar.Items.ItemAdd += CalendarItems_ItemAdd;
+            _calendar.Items.ItemChange += CalendarItems_ItemChange;
+            _calendar.Items.ItemRemove += CalendarItems_ItemRemove;
             _eventService = _unityContainer.Resolve<IEventService>();
             _networkCommunication = _unityContainer.Resolve<INetworkCommunication>();
             _roomItems = _unityContainer.Resolve<IList<RoomItem>>();
@@ -59,7 +58,7 @@ namespace RoomInfoOutlookAddIn
                         int id = roomItem.AgendaItems[i].Id;
                         string guid = roomItem.Room.RoomGuid;
                         Outlook.AppointmentItem appointmentItem = null;
-                        foreach (Outlook.AppointmentItem item in _calendarItems)
+                        foreach (Outlook.AppointmentItem item in _calendar.Items)
                         {
                             if (item.Resources == null) break;
                             string itemGuid = GetGuid(item.Resources);
@@ -88,10 +87,12 @@ namespace RoomInfoOutlookAddIn
             }
         }
 
-        private async void _eventService_SyncButtonPressed(object sender, RoomItem roomItem)
+        private void _eventService_SyncButtonPressed(object sender, RoomItem roomItem)
         {
-            await _networkCommunication.SendPayload(JsonConvert.SerializeObject(_discoveryPackage), null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
-            //TODO
+            _isSyncInProgress = true;
+            ClearCalendar(roomItem.Room.RoomGuid);
+            AddItemsToCalendar(roomItem.AgendaItems, roomItem.Room);
+            _isSyncInProgress = false;
         }
 
         private async void ThisAddIn_AddButtonPressed(object sender, RoomItem roomItem)
@@ -106,9 +107,10 @@ namespace RoomInfoOutlookAddIn
                     ? !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName + " " + roomNumber : roomNumber
                     : !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName : "";
                 newAppointment.Resources = roomItem.Room.RoomGuid;
-                var propertyAccessor = newAppointment.PropertyAccessor;
-                var userProperty = newAppointment.UserProperties.Add("RemoteDbEntityId", Outlook.OlUserPropertyType.olInteger);
-                userProperty.Value = 0;
+                var remoteDbEntityId = newAppointment.UserProperties.Add("RemoteDbEntityId", Outlook.OlUserPropertyType.olInteger);
+                var remoteDbEntityTimeStamp = newAppointment.UserProperties.Add("RemoteDbEntityTimeStamp", Outlook.OlUserPropertyType.olDuration);
+                remoteDbEntityId.Value = 0;
+                remoteDbEntityTimeStamp.Value = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 newAppointment.Display();
             }
             catch (Exception)
@@ -119,6 +121,7 @@ namespace RoomInfoOutlookAddIn
 
         private async void CalendarItems_ItemChange(object Item)
         {
+            if (_isSyncInProgress) return;
             if (_isProcessingPackage)
             {
                 _isProcessingPackage = false;
@@ -132,6 +135,7 @@ namespace RoomInfoOutlookAddIn
 
         private async void CalendarItems_ItemAdd(object Item)
         {
+            if (_isSyncInProgress) return;
             _appointmentItem = Item as Outlook.AppointmentItem;
             await TransmitAgendaItem(_appointmentItem);
         }
@@ -158,6 +162,7 @@ namespace RoomInfoOutlookAddIn
 
         protected override IRibbonExtensibility CreateRibbonExtensibilityObject()
         {
+            _isSyncInProgress = false;
             _discoveryPackage = new Package() { PayloadType = (int)PayloadType.Discovery };
             _isProcessingPackage = false;
             _unityContainer = new UnityContainer();
@@ -261,6 +266,41 @@ namespace RoomInfoOutlookAddIn
                 if (personalCalendar.Name == calendarName) return personalCalendar;
             }
             return primaryCalendar.Folders.Add(calendarName, Outlook.OlDefaultFolders.olFolderCalendar);
+        }
+
+        private void ClearCalendar(string roomGuid)
+        {
+            int c = _calendar.Items.Count;
+            for (int i = _calendar.Items.Count; i > 0; i--)
+            {
+                if (GetGuid((_calendar.Items[i] as Outlook.AppointmentItem).Resources).Equals(roomGuid))
+                    (_calendar.Items[i] as Outlook.AppointmentItem).Delete();
+            }
+        }
+
+        private void AddItemsToCalendar(List<AgendaItem> agendaItems, Room room)
+        {
+            if (agendaItems != null && agendaItems.Count > 0)
+            {
+                foreach (var agendaItem in agendaItems)
+                {
+                    Outlook.AppointmentItem appointmentItem = _calendar.Items.Add(Outlook.OlItemType.olAppointmentItem) as Outlook.AppointmentItem;
+                    appointmentItem.Location = !(string.IsNullOrEmpty(room.RoomNumber) || string.IsNullOrWhiteSpace(room.RoomNumber))
+                    ? !(string.IsNullOrEmpty(room.RoomName) || string.IsNullOrWhiteSpace(room.RoomName)) ? room.RoomName + " " + room.RoomNumber : room.RoomNumber
+                    : !(string.IsNullOrEmpty(room.RoomName) || string.IsNullOrWhiteSpace(room.RoomName)) ? room.RoomName : "";
+                    appointmentItem.Start = agendaItem.Start.DateTime;
+                    appointmentItem.End = agendaItem.End.DateTime;
+                    appointmentItem.Subject = agendaItem.Title;
+                    appointmentItem.Body = agendaItem.Description;
+                    appointmentItem.AllDayEvent = agendaItem.IsAllDayEvent;
+                    appointmentItem.Resources = room.RoomGuid;
+                    var remoteDbEntityId = appointmentItem.UserProperties.Add("RemoteDbEntityId", Outlook.OlUserPropertyType.olInteger);
+                    //var remoteDbEntityTimeStamp = appointmentItem.UserProperties.Add("RemoteDbEntityTimeStamp", Outlook.OlUserPropertyType.olNumber);
+                    remoteDbEntityId.Value = agendaItem.Id;
+                    //remoteDbEntityTimeStamp.Value = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    appointmentItem.Save();
+                }
+            }
         }
     }
 }
