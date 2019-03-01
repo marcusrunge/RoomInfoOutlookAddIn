@@ -22,23 +22,20 @@ namespace RoomInfoOutlookAddIn
         INetworkCommunication _networkCommunication;
         IList<RoomItem> _roomItems;
         Outlook.AppointmentItem _appointmentItem;
-        Outlook.MAPIFolder _calendar;
-        bool _isProcessingPackage;
+        Outlook.MAPIFolder _roomInfocalendar;
         Package _discoveryPackage;
         bool _isSyncInProgress;
 
         private async void ThisAddIn_Startup(object sender, EventArgs e)
         {
-            _calendar = CreateCustomCalendarIfNotExists("RoomInfoCalendar");
-            _calendar.Items.ItemAdd += CalendarItems_ItemAdd;
-            _calendar.Items.ItemChange += CalendarItems_ItemChange;
-            _calendar.Items.ItemRemove += CalendarItems_ItemRemove;
+            _roomInfocalendar = CreateCustomCalendarIfNotExists("RoomInfoCalendar");
+            _roomInfocalendar.Items.ItemAdd += CalendarItems_ItemAdd;
+            _roomInfocalendar.Items.ItemChange += CalendarItems_ItemChange;
+            _roomInfocalendar.Items.ItemRemove += CalendarItems_ItemRemove;
             _eventService = _unityContainer.Resolve<IEventService>();
-            _networkCommunication = _unityContainer.Resolve<INetworkCommunication>();
             _roomItems = _unityContainer.Resolve<IList<RoomItem>>();
             _eventService.AddButtonPressed += ThisAddIn_AddButtonPressed;
             _eventService.SyncButtonPressed += _eventService_SyncButtonPressed;
-            await _networkCommunication.StartConnectionListener(Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
             _networkCommunication.PayloadReceived += async (s, ea) =>
             {
                 if (ea.Package != null) await ProcessPackage(JsonConvert.DeserializeObject<Package>(ea.Package), ea.HostName);
@@ -48,7 +45,7 @@ namespace RoomInfoOutlookAddIn
 
         private async void CalendarItems_ItemRemove()
         {
-            await _networkCommunication.SendPayload(JsonConvert.SerializeObject(_discoveryPackage), null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
+            //await _networkCommunication.SendPayload(JsonConvert.SerializeObject(_discoveryPackage), null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
             try
             {
                 foreach (var roomItem in _roomItems)
@@ -58,7 +55,7 @@ namespace RoomInfoOutlookAddIn
                         int id = roomItem.AgendaItems[i].Id;
                         string guid = roomItem.Room.RoomGuid;
                         Outlook.AppointmentItem appointmentItem = null;
-                        foreach (Outlook.AppointmentItem item in _calendar.Items)
+                        foreach (Outlook.AppointmentItem item in _roomInfocalendar.Items)
                         {
                             if (item.Resources == null) break;
                             string itemGuid = GetGuid(item.Resources);
@@ -95,14 +92,14 @@ namespace RoomInfoOutlookAddIn
             _isSyncInProgress = false;
         }
 
-        private async void ThisAddIn_AddButtonPressed(object sender, RoomItem roomItem)
+        private void ThisAddIn_AddButtonPressed(object sender, RoomItem roomItem)
         {
-            await _networkCommunication.SendPayload("", null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
+            //await _networkCommunication.SendPayload("", null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
             try
             {
                 var roomNumber = roomItem.Room.RoomNumber;
                 var roomName = roomItem.Room.RoomName;
-                Outlook.AppointmentItem newAppointment = _calendar.Items.Add(Outlook.OlItemType.olAppointmentItem) as Outlook.AppointmentItem;
+                Outlook.AppointmentItem newAppointment = _roomInfocalendar.Items.Add(Outlook.OlItemType.olAppointmentItem) as Outlook.AppointmentItem;
                 newAppointment.Location = !(string.IsNullOrEmpty(roomNumber) || string.IsNullOrWhiteSpace(roomNumber))
                     ? !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName + " " + roomNumber : roomNumber
                     : !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName : "";
@@ -122,11 +119,6 @@ namespace RoomInfoOutlookAddIn
         private async void CalendarItems_ItemChange(object Item)
         {
             if (_isSyncInProgress) return;
-            if (_isProcessingPackage)
-            {
-                _isProcessingPackage = false;
-                return;
-            }
             _appointmentItem = Item as Outlook.AppointmentItem;
             await TransmitAgendaItem(_appointmentItem);
             //var schedulePackage = new Package() { PayloadType = (int)PayloadType.RequestSchedule };
@@ -138,6 +130,9 @@ namespace RoomInfoOutlookAddIn
             if (_isSyncInProgress) return;
             _appointmentItem = Item as Outlook.AppointmentItem;
             await TransmitAgendaItem(_appointmentItem);
+            string hostName = GetHostName(_roomItems, _appointmentItem);
+            var schedulePackage = new Package() { PayloadType = (int)PayloadType.RequestSchedule };
+            await _networkCommunication.SendPayload(JsonConvert.SerializeObject(schedulePackage), hostName, Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
         }
 
         private void ThisAddIn_Shutdown(object sender, EventArgs e)
@@ -164,12 +159,13 @@ namespace RoomInfoOutlookAddIn
         {
             _isSyncInProgress = false;
             _discoveryPackage = new Package() { PayloadType = (int)PayloadType.Discovery };
-            _isProcessingPackage = false;
             _unityContainer = new UnityContainer();
             _unityContainer.RegisterSingleton<IMainRibbon, MainRibbon>();
             _unityContainer.RegisterSingleton<INetworkCommunication, NetworkCommunication>();
             _unityContainer.RegisterSingleton<IEventService, EventService>();
             _unityContainer.RegisterSingleton<IList<RoomItem>, List<RoomItem>>();
+            _networkCommunication = _unityContainer.Resolve<INetworkCommunication>();
+            Task.Run(async () => await _networkCommunication.StartConnectionListener(Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl));
             Outlook.Application outlookApplication = GetHostItem<Outlook.Application>(typeof(Outlook.Application), "Application");
             int languageID = outlookApplication.LanguageSettings.get_LanguageID(MsoAppLanguageID.msoLanguageIDUI);
             Thread.CurrentThread.CurrentUICulture = new CultureInfo(languageID);
@@ -179,7 +175,7 @@ namespace RoomInfoOutlookAddIn
         private async Task TransmitAgendaItem(Outlook.AppointmentItem appointmentItem)
         {
             string hostName = GetHostName(_roomItems, appointmentItem);
-            var agendaItem = new AgendaItem()
+            var updatedAgendaItem = new AgendaItem()
             {
                 Id = appointmentItem.UserProperties.Find("RemoteDbEntityId").Value,
                 Description = appointmentItem.Body,
@@ -193,26 +189,38 @@ namespace RoomInfoOutlookAddIn
             var agendaItems = _roomItems.Where(x => x.Room.RoomGuid.Equals(guid)).Select(x => x.AgendaItems).FirstOrDefault();
             if (agendaItems != null)
             {
-                var actualAgendaItem = agendaItems.Where(x => x.Id == agendaItem.Id).Select(x => x).FirstOrDefault();
-                if (actualAgendaItem != null &&
-                    actualAgendaItem.IsAllDayEvent == agendaItem.IsAllDayEvent &&
-                    actualAgendaItem.Occupancy == agendaItem.Occupancy &&
-                    actualAgendaItem.Start == agendaItem.Start &&
+                var agendaItem = agendaItems.Where(x => x.Id == updatedAgendaItem.Id).Select(x => x).FirstOrDefault();
+                if (agendaItem != null &&
+                    agendaItem.IsAllDayEvent == updatedAgendaItem.IsAllDayEvent &&
+                    agendaItem.Occupancy == updatedAgendaItem.Occupancy &&
+                    agendaItem.Start == updatedAgendaItem.Start &&
                     //actualAgendaItem.TimeStamp == agendaItem.TimeStamp &&
-                    actualAgendaItem.Title == agendaItem.Title &&
-                    actualAgendaItem.Description == agendaItem.Description &&
-                    actualAgendaItem.End == agendaItem.End)
+                    agendaItem.Title == updatedAgendaItem.Title &&
+                    agendaItem.Description == updatedAgendaItem.Description &&
+                    agendaItem.End == updatedAgendaItem.End)
                     return;
-
-
-                var package = new Package() { PayloadType = (int)PayloadType.AgendaItem, Payload = agendaItem };
+                var package = new Package() { PayloadType = (int)PayloadType.AgendaItem, Payload = updatedAgendaItem };
                 await _networkCommunication.SendPayload(JsonConvert.SerializeObject(package), hostName, Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
+                for (int i = 0; i < _roomItems.Count; i++)
+                {
+                    if (_roomItems[i].Room.RoomGuid.Equals(guid))
+                    {
+                        for (int j = 0; j < _roomItems[i].AgendaItems.Count; j++)
+                        {
+                            if (_roomItems[i].AgendaItems[j].Id == updatedAgendaItem.Id)
+                            {
+                                _roomItems[i].AgendaItems[j] = updatedAgendaItem;
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
             }
         }
 
         private Task ProcessPackage(Package package, string hostName)
         {
-            _isProcessingPackage = true;
             if (package != null)
             {
                 switch ((PayloadType)package.PayloadType)
@@ -282,11 +290,18 @@ namespace RoomInfoOutlookAddIn
 
         private void ClearCalendar(string roomGuid)
         {
-            int c = _calendar.Items.Count;
-            for (int i = _calendar.Items.Count; i > 0; i--)
+            Outlook.Folder outlookFolderDeletedItems = (Outlook.Folder)Application.Session.GetDefaultFolder(Outlook.OlDefaultFolders.olFolderDeletedItems);
+            for (int i = _roomInfocalendar.Items.Count; i > 0; i--)
             {
-                if (GetGuid((_calendar.Items[i] as Outlook.AppointmentItem).Resources).Equals(roomGuid))
-                    (_calendar.Items[i] as Outlook.AppointmentItem).Delete();
+                if (GetGuid((_roomInfocalendar.Items[i] as Outlook.AppointmentItem).Resources).Equals(roomGuid))
+                {
+                    int id = (_roomInfocalendar.Items[i] as Outlook.AppointmentItem).UserProperties.Find("RemoteDbEntityId").Value;
+                    (_roomInfocalendar.Items[i] as Outlook.AppointmentItem).Delete();
+                    for (int j = outlookFolderDeletedItems.Items.Count; j > 0; j--)
+                    {
+                        if (outlookFolderDeletedItems.Items[j].UserProperties.Find("RemoteDbEntityId").Value == id) outlookFolderDeletedItems.Items[j].Delete();                        
+                    }
+                }
             }
         }
 
@@ -296,7 +311,7 @@ namespace RoomInfoOutlookAddIn
             {
                 foreach (var agendaItem in agendaItems)
                 {
-                    Outlook.AppointmentItem appointmentItem = _calendar.Items.Add(Outlook.OlItemType.olAppointmentItem) as Outlook.AppointmentItem;
+                    Outlook.AppointmentItem appointmentItem = _roomInfocalendar.Items.Add(Outlook.OlItemType.olAppointmentItem) as Outlook.AppointmentItem;
                     appointmentItem.Location = !(string.IsNullOrEmpty(room.RoomNumber) || string.IsNullOrWhiteSpace(room.RoomNumber))
                     ? !(string.IsNullOrEmpty(room.RoomName) || string.IsNullOrWhiteSpace(room.RoomName)) ? room.RoomName + " " + room.RoomNumber : room.RoomNumber
                     : !(string.IsNullOrEmpty(room.RoomName) || string.IsNullOrWhiteSpace(room.RoomName)) ? room.RoomName : "";

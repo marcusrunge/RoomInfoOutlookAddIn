@@ -61,7 +61,7 @@ namespace RoomInfoOutlookAddIn
             _eventService = eventService;
             _roomItems = roomItems;
             _agendaItem = new AgendaItem();
-            _networkCommunication.StartConnectionListener(Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
+            //_networkCommunication.StartConnectionListener(Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
             _networkCommunication.PayloadReceived += async (s, e) =>
             {
                 if (e.Package != null) await ProcessPackage(JsonConvert.DeserializeObject<Package>(e.Package), e.HostName);
