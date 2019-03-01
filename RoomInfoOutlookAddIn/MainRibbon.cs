@@ -4,6 +4,7 @@ using ModelLibrary;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Resources;
@@ -163,7 +164,6 @@ namespace RoomInfoOutlookAddIn
                 case "occupancyDropDown": return 6;
                 default: return 0;
             }
-
         }
 
         public async void OnAction(IRibbonControl control)
@@ -204,6 +204,16 @@ namespace RoomInfoOutlookAddIn
                     break;
                 default:
                     break;
+            }
+        }
+
+        public Bitmap OnGetImage(IRibbonControl control)
+        {
+            switch (control.Id)
+            {
+                case "addButton": return Properties.Resources.add;
+                case "syncButton":return Properties.Resources.refresh;
+                default: return null;
             }
         }
 

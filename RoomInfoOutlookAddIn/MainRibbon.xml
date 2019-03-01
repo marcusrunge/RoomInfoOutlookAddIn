@@ -13,8 +13,8 @@
         </group>
         <group id="management" label="Management">
           <box id="managementButtonBox" boxStyle="vertical">
-            <button id="addButton" size="large" label="Add" onAction="OnAction"/>
-            <button id="syncButton" size="large" label="Sync" onAction="OnAction"/>
+            <button id="addButton" size="large" label="Add" onAction="OnAction" getImage="OnGetImage"/>
+            <button id="syncButton" size="large" label="Sync" onAction="OnAction" getImage="OnGetImage"/>
           </box>          
         </group>
         <group id="roomInfoRemoteSettings" label="Settings">
