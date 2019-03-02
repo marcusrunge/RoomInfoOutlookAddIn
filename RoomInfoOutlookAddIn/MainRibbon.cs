@@ -152,6 +152,9 @@ namespace RoomInfoOutlookAddIn
             {
                 case "MainTab": return _resourceManager.GetString("Tab_Label");
                 case "recycleButton": return _resourceManager.GetString("RecycleButton_Label");
+                case "roomInfoRemoteRooms": return _resourceManager.GetString("Rooms_GroupLabel");
+                case "management": return _resourceManager.GetString("Management_GroupLabel");
+                case "roomInfoRemoteSettings": return _resourceManager.GetString("Settings_GroupLabel");
                 default: return "";
             }
         }

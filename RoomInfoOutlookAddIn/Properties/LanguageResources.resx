@@ -135,8 +135,17 @@
   <data name="DropDown_ItemLabel_Occupancy_Present" xml:space="preserve">
     <value>PRESENT</value>
   </data>
+  <data name="Management_GroupLabel" xml:space="preserve">
+    <value>Management</value>
+  </data>
   <data name="RecycleButton_Label" xml:space="preserve">
     <value>Recycle</value>
+  </data>
+  <data name="Rooms_GroupLabel" xml:space="preserve">
+    <value>Rooms</value>
+  </data>
+  <data name="Settings_GroupLabel" xml:space="preserve">
+    <value>Settings</value>
   </data>
   <data name="Tab_Label" xml:space="preserve">
     <value>Roominfo</value>

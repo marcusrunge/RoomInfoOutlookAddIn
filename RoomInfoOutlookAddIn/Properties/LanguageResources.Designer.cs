@@ -115,11 +115,38 @@ namespace RoomInfoOutlookAddIn.Properties {
         }
         
         /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Management ähnelt.
+        /// </summary>
+        internal static string Management_GroupLabel {
+            get {
+                return ResourceManager.GetString("Management_GroupLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Sucht eine lokalisierte Zeichenfolge, die Recycle ähnelt.
         /// </summary>
         internal static string RecycleButton_Label {
             get {
                 return ResourceManager.GetString("RecycleButton_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Rooms ähnelt.
+        /// </summary>
+        internal static string Rooms_GroupLabel {
+            get {
+                return ResourceManager.GetString("Rooms_GroupLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Zeichenfolge, die Settings ähnelt.
+        /// </summary>
+        internal static string Settings_GroupLabel {
+            get {
+                return ResourceManager.GetString("Settings_GroupLabel", resourceCulture);
             }
         }
         
