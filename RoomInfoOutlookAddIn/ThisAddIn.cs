@@ -105,9 +105,9 @@ namespace RoomInfoOutlookAddIn
                     : !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName : "";
                 newAppointment.Resources = roomItem.Room.RoomGuid;
                 var remoteDbEntityId = newAppointment.UserProperties.Add("RemoteDbEntityId", Outlook.OlUserPropertyType.olInteger);
-                //var remoteDbEntityTimeStamp = newAppointment.UserProperties.Add("RemoteDbEntityTimeStamp", Outlook.OlUserPropertyType.olDuration);
+                var remoteDbEntityTimeStamp = newAppointment.UserProperties.Add("RemoteDbEntityTimeStamp", Outlook.OlUserPropertyType.olText);
                 remoteDbEntityId.Value = 0;
-                //remoteDbEntityTimeStamp.Value = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                remoteDbEntityTimeStamp.Value = DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString();
                 newAppointment.Display();
             }
             catch (Exception)
@@ -183,7 +183,8 @@ namespace RoomInfoOutlookAddIn
                 IsAllDayEvent = appointmentItem.AllDayEvent,
                 Start = appointmentItem.Start,
                 Title = appointmentItem.Subject,
-                Occupancy = 3
+                TimeStamp = long.Parse(appointmentItem.UserProperties.Find("RemoteDbEntityTimeStamp").Value),
+            Occupancy = 3
             };
             string guid = GetGuid(appointmentItem.Resources);
             var agendaItems = _roomItems.Where(x => x.Room.RoomGuid.Equals(guid)).Select(x => x.AgendaItems).FirstOrDefault();
@@ -194,11 +195,14 @@ namespace RoomInfoOutlookAddIn
                     agendaItem.IsAllDayEvent == updatedAgendaItem.IsAllDayEvent &&
                     agendaItem.Occupancy == updatedAgendaItem.Occupancy &&
                     agendaItem.Start == updatedAgendaItem.Start &&
-                    //actualAgendaItem.TimeStamp == agendaItem.TimeStamp &&
+                    agendaItem.TimeStamp == updatedAgendaItem.TimeStamp &&
                     agendaItem.Title == updatedAgendaItem.Title &&
                     agendaItem.Description == updatedAgendaItem.Description &&
                     agendaItem.End == updatedAgendaItem.End)
                     return;
+                var unixTimeMilliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                updatedAgendaItem.TimeStamp = unixTimeMilliseconds;
+                appointmentItem.UserProperties.Find("RemoteDbEntityTimeStamp").Value = unixTimeMilliseconds.ToString();
                 var package = new Package() { PayloadType = (int)PayloadType.AgendaItem, Payload = updatedAgendaItem };
                 await _networkCommunication.SendPayload(JsonConvert.SerializeObject(package), hostName, Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
                 for (int i = 0; i < _roomItems.Count; i++)
@@ -322,9 +326,9 @@ namespace RoomInfoOutlookAddIn
                     appointmentItem.AllDayEvent = agendaItem.IsAllDayEvent;
                     appointmentItem.Resources = room.RoomGuid;
                     var remoteDbEntityId = appointmentItem.UserProperties.Add("RemoteDbEntityId", Outlook.OlUserPropertyType.olInteger);
-                    //var remoteDbEntityTimeStamp = appointmentItem.UserProperties.Add("RemoteDbEntityTimeStamp", Outlook.OlUserPropertyType.olNumber);
+                    var remoteDbEntityTimeStamp = appointmentItem.UserProperties.Add("RemoteDbEntityTimeStamp", Outlook.OlUserPropertyType.olText);
                     remoteDbEntityId.Value = agendaItem.Id;
-                    //remoteDbEntityTimeStamp.Value = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    remoteDbEntityTimeStamp.Value = agendaItem.TimeStamp.ToString();
                     appointmentItem.Save();
                 }
             }
