@@ -99,16 +99,16 @@ namespace RoomInfoOutlookAddIn
             {
                 var roomNumber = roomItem.Room.RoomNumber;
                 var roomName = roomItem.Room.RoomName;
-                Outlook.AppointmentItem newAppointment = _roomInfocalendar.Items.Add(Outlook.OlItemType.olAppointmentItem) as Outlook.AppointmentItem;
-                newAppointment.Location = !(string.IsNullOrEmpty(roomNumber) || string.IsNullOrWhiteSpace(roomNumber))
+                Outlook.AppointmentItem appointmentItem = _roomInfocalendar.Items.Add(Outlook.OlItemType.olAppointmentItem) as Outlook.AppointmentItem;
+                appointmentItem.Location = !(string.IsNullOrEmpty(roomNumber) || string.IsNullOrWhiteSpace(roomNumber))
                     ? !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName + " " + roomNumber : roomNumber
                     : !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName : "";
-                newAppointment.Resources = roomItem.Room.RoomGuid;
-                var remoteDbEntityId = newAppointment.UserProperties.Add("RemoteDbEntityId", Outlook.OlUserPropertyType.olInteger);
-                var remoteDbEntityTimeStamp = newAppointment.UserProperties.Add("RemoteDbEntityTimeStamp", Outlook.OlUserPropertyType.olText);
+                appointmentItem.Resources = roomItem.Room.RoomGuid;
+                var remoteDbEntityId = appointmentItem.UserProperties.Add("RemoteDbEntityId", Outlook.OlUserPropertyType.olInteger);
+                var remoteDbEntityTimeStamp = appointmentItem.UserProperties.Add("RemoteDbEntityTimeStamp", Outlook.OlUserPropertyType.olText);
                 remoteDbEntityId.Value = 0;
                 remoteDbEntityTimeStamp.Value = DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString();
-                newAppointment.Display();
+                appointmentItem.Display();
             }
             catch (Exception)
             {
