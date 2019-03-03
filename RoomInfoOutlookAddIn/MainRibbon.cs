@@ -41,14 +41,13 @@ namespace RoomInfoOutlookAddIn
     [ComVisible(true)]
     public class MainRibbon : IMainRibbon
     {
-        private IRibbonUI ribbon;
-        private INetworkCommunication _networkCommunication;
+        IRibbonUI ribbon;
+        INetworkCommunication _networkCommunication;
         IEventService _eventService;
-
-        private IList<RoomItem> _roomItems;
-        private AgendaItem _agendaItem;
-        private int _selectedRoomId;
-        private ResourceManager _resourceManager;
+        IList<RoomItem> _roomItems;
+        AgendaItem _agendaItem;
+        int _selectedRoomId;
+        ResourceManager _resourceManager;
         Package _discoveryPackage;
 
         public MainRibbon(INetworkCommunication networkCommunication, IEventService eventService, IList<RoomItem> roomItems)
@@ -286,9 +285,10 @@ namespace RoomInfoOutlookAddIn
                             if (_roomItems[i].HostName == hostName)
                             {
                                 _roomItems[i].AgendaItems = agendaItems;
+                                _eventService.OnScheduleReceived(_roomItems[i]);
                                 break;
-                            }
-                        }
+                            }                            
+                        }                        
                         break;
                     case PayloadType.StandardWeek:
                         break;

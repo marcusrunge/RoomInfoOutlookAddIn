@@ -10,6 +10,9 @@ namespace ApplicationServiceLibrary
 
         event EventHandler<RoomItem> SyncButtonPressed;
         void OnSyncButtonPressed(RoomItem roomItem);
+
+        event EventHandler<RoomItem> ScheduleReceived;
+        void OnScheduleReceived(RoomItem roomItem);
     }
 
     public class EventService : IEventService
@@ -19,5 +22,8 @@ namespace ApplicationServiceLibrary
 
         public event EventHandler<RoomItem> SyncButtonPressed;
         public void OnSyncButtonPressed(RoomItem roomItem) => SyncButtonPressed?.Invoke(null, roomItem);
+
+        public event EventHandler<RoomItem> ScheduleReceived;
+        public void OnScheduleReceived(RoomItem roomItem) => ScheduleReceived?.Invoke(null, roomItem);
     }
 }

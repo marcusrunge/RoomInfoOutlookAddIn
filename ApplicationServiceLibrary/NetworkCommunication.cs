@@ -133,6 +133,6 @@ namespace ApplicationServiceLibrary
             catch { }
         }
 
-        void OnPayloadReceived(PayloadReceivedEventArgs e) => PayloadReceived?.Invoke(null, e);
+        void OnPayloadReceived(PayloadReceivedEventArgs payload) => PayloadReceived?.Invoke(null, payload);
     }
 }

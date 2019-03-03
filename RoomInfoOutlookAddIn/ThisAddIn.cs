@@ -36,15 +36,21 @@ namespace RoomInfoOutlookAddIn
             _roomItems = _unityContainer.Resolve<IList<RoomItem>>();
             _eventService.AddButtonPressed += ThisAddIn_AddButtonPressed;
             _eventService.SyncButtonPressed += _eventService_SyncButtonPressed;
-            _networkCommunication.PayloadReceived += async (s, ea) =>
+            _networkCommunication.PayloadReceived += async (s, payload) =>
             {
-                if (ea.Package != null) await ProcessPackage(JsonConvert.DeserializeObject<Package>(ea.Package), ea.HostName);
+                if (payload.Package != null) await ProcessPackage(JsonConvert.DeserializeObject<Package>(payload.Package), payload.HostName);
             };
             await _networkCommunication.SendPayload(JsonConvert.SerializeObject(_discoveryPackage), null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
+            _eventService.ScheduleReceived += (s, roomItem) =>
+            {
+                AddItemsToCalendar(roomItem.AgendaItems, roomItem.Room);
+                _isSyncInProgress = false;
+            };
         }
 
         private async void CalendarItems_ItemRemove()
         {
+            if (_isSyncInProgress) return;
             //await _networkCommunication.SendPayload(JsonConvert.SerializeObject(_discoveryPackage), null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
             try
             {
@@ -53,25 +59,28 @@ namespace RoomInfoOutlookAddIn
                     for (int i = 0; i < roomItem.AgendaItems.Count; i++)
                     {
                         int id = roomItem.AgendaItems[i].Id;
-                        string guid = roomItem.Room.RoomGuid;
-                        Outlook.AppointmentItem appointmentItem = null;
-                        foreach (Outlook.AppointmentItem item in _roomInfocalendar.Items)
+                        if (id > 0)
                         {
-                            if (item.Resources == null) break;
-                            string itemGuid = item.UserProperties.Find("RoomGuid").Value;
-                            int itemId = int.Parse(item.UserProperties.Find("RemoteDbEntityId").Value);
-                            if (itemGuid.Equals(guid) && itemId == id)
+                            string guid = roomItem.Room.RoomGuid;
+                            Outlook.AppointmentItem appointmentItem = null;
+                            foreach (Outlook.AppointmentItem item in _roomInfocalendar.Items)
                             {
-                                appointmentItem = item;
-                                break;
+                                if (item.Resources == null) break;
+                                string itemGuid = item.UserProperties.Find("RoomGuid").Value;
+                                int itemId = int.Parse(item.UserProperties.Find("RemoteDbEntityId").Value);
+                                if (itemGuid.Equals(guid) && itemId == id)
+                                {
+                                    appointmentItem = item;
+                                    break;
+                                }
                             }
-                        }
-                        if (appointmentItem == null)
-                        {
-                            roomItem.AgendaItems.Remove(roomItem.AgendaItems[i]);
-                            var agendaItem = new AgendaItem() { Id = id, IsDeleted = true };
-                            var agendaItemPackage = new Package() { PayloadType = (int)PayloadType.AgendaItem, Payload = agendaItem };
-                            await _networkCommunication.SendPayload(JsonConvert.SerializeObject(agendaItemPackage), roomItem.HostName, Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
+                            if (appointmentItem == null)
+                            {
+                                roomItem.AgendaItems.Remove(roomItem.AgendaItems[i]);
+                                var agendaItem = new AgendaItem() { Id = id, IsDeleted = true };
+                                var agendaItemPackage = new Package() { PayloadType = (int)PayloadType.AgendaItem, Payload = agendaItem };
+                                await _networkCommunication.SendPayload(JsonConvert.SerializeObject(agendaItemPackage), roomItem.HostName, Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
+                            }
                         }
                     }
                     var schedulePackage = new Package() { PayloadType = (int)PayloadType.RequestSchedule };
@@ -84,12 +93,14 @@ namespace RoomInfoOutlookAddIn
             }
         }
 
-        private void _eventService_SyncButtonPressed(object sender, RoomItem roomItem)
+        private async void _eventService_SyncButtonPressed(object sender, RoomItem roomItem)
         {
             _isSyncInProgress = true;
-            ClearCalendar(roomItem.Room.RoomGuid);
-            AddItemsToCalendar(roomItem.AgendaItems, roomItem.Room);
-            _isSyncInProgress = false;
+            ClearCalendar(roomItem);
+            var schedulePackage = new Package() { PayloadType = (int)PayloadType.RequestSchedule };
+            await _networkCommunication.SendPayload(JsonConvert.SerializeObject(schedulePackage), roomItem.HostName, Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
+            //AddItemsToCalendar(roomItem.AgendaItems, roomItem.Room);
+            //_isSyncInProgress = false;
         }
 
         private void ThisAddIn_AddButtonPressed(object sender, RoomItem roomItem)
@@ -322,12 +333,12 @@ namespace RoomInfoOutlookAddIn
             return primaryCalendar.Folders.Add(calendarName, Outlook.OlDefaultFolders.olFolderCalendar);
         }
 
-        private void ClearCalendar(string roomGuid)
+        private void ClearCalendar(RoomItem roomItem)
         {
             Outlook.Folder outlookFolderDeletedItems = (Outlook.Folder)Application.Session.GetDefaultFolder(Outlook.OlDefaultFolders.olFolderDeletedItems);
             for (int i = _roomInfocalendar.Items.Count; i > 0; i--)
             {
-                if (((string)(_roomInfocalendar.Items[i] as Outlook.AppointmentItem).UserProperties.Find("RoomGuid").Value).Equals(roomGuid))
+                if (((string)(_roomInfocalendar.Items[i] as Outlook.AppointmentItem).UserProperties.Find("RoomGuid").Value).Equals(roomItem.Room.RoomGuid))
                 {
                     int id = (_roomInfocalendar.Items[i] as Outlook.AppointmentItem).UserProperties.Find("RemoteDbEntityId").Value;
                     (_roomInfocalendar.Items[i] as Outlook.AppointmentItem).Delete();
@@ -337,6 +348,7 @@ namespace RoomInfoOutlookAddIn
                     }
                 }
             }
+            for (int i = 0; i < roomItem.AgendaItems.Count; i++) roomItem.AgendaItems[i].Id = -1;
         }
 
         private void AddItemsToCalendar(List<AgendaItem> agendaItems, Room room)
@@ -345,48 +357,56 @@ namespace RoomInfoOutlookAddIn
             {
                 foreach (var agendaItem in agendaItems)
                 {
-                    Outlook.AppointmentItem appointmentItem = _roomInfocalendar.Items.Add(Outlook.OlItemType.olAppointmentItem) as Outlook.AppointmentItem;
-                    appointmentItem.Location = !(string.IsNullOrEmpty(room.RoomNumber) || string.IsNullOrWhiteSpace(room.RoomNumber))
-                    ? !(string.IsNullOrEmpty(room.RoomName) || string.IsNullOrWhiteSpace(room.RoomName)) ? room.RoomName + " " + room.RoomNumber : room.RoomNumber
-                    : !(string.IsNullOrEmpty(room.RoomName) || string.IsNullOrWhiteSpace(room.RoomName)) ? room.RoomName : "";
-                    appointmentItem.Start = agendaItem.Start.DateTime;
-                    appointmentItem.End = agendaItem.End.DateTime;
-                    appointmentItem.Subject = agendaItem.Title;
-                    appointmentItem.Body = agendaItem.Description;
-                    appointmentItem.AllDayEvent = agendaItem.IsAllDayEvent;
-                    var remoteDbEntityId = appointmentItem.UserProperties.Add("RemoteDbEntityId", Outlook.OlUserPropertyType.olInteger);
-                    var remoteDbEntityTimeStamp = appointmentItem.UserProperties.Add("RemoteDbEntityTimeStamp", Outlook.OlUserPropertyType.olText);
-                    var roomGuid = appointmentItem.UserProperties.Add("RoomGuid", Outlook.OlUserPropertyType.olText);
-                    remoteDbEntityId.Value = agendaItem.Id;
-                    remoteDbEntityTimeStamp.Value = agendaItem.TimeStamp.ToString();
-                    roomGuid.Value = room.RoomGuid;
-                    switch ((OccupancyVisualState)agendaItem.Occupancy)
+                    bool cont = true;
+                    foreach (Outlook.AppointmentItem item in _roomInfocalendar.Items)
                     {
-                        case OccupancyVisualState.FreeVisualState:
-                            appointmentItem.BusyStatus = Outlook.OlBusyStatus.olFree;
-                            break;
-                        case OccupancyVisualState.PresentVisualState:
-                            appointmentItem.BusyStatus = Outlook.OlBusyStatus.olFree;
-                            break;
-                        case OccupancyVisualState.AbsentVisualState:
-                            appointmentItem.BusyStatus = Outlook.OlBusyStatus.olOutOfOffice;
-                            break;
-                        case OccupancyVisualState.BusyVisualState:
-                            appointmentItem.BusyStatus = Outlook.OlBusyStatus.olBusy;
-                            break;
-                        case OccupancyVisualState.OccupiedVisualState:
-                            appointmentItem.BusyStatus = Outlook.OlBusyStatus.olBusy;
-                            break;
-                        case OccupancyVisualState.LockedVisualState:
-                            appointmentItem.BusyStatus = Outlook.OlBusyStatus.olBusy;
-                            break;
-                        case OccupancyVisualState.UndefinedVisualState:
-                            appointmentItem.BusyStatus = Outlook.OlBusyStatus.olTentative;
-                            break;
-                        default:
-                            break;
+                        if (agendaItem.Id == item.UserProperties.Find("RemoteDbEntityId").Value) cont = false;
                     }
-                    appointmentItem.Save();
+                    if (cont)
+                    {
+                        Outlook.AppointmentItem appointmentItem = _roomInfocalendar.Items.Add(Outlook.OlItemType.olAppointmentItem) as Outlook.AppointmentItem;
+                        appointmentItem.Location = !(string.IsNullOrEmpty(room.RoomNumber) || string.IsNullOrWhiteSpace(room.RoomNumber))
+                        ? !(string.IsNullOrEmpty(room.RoomName) || string.IsNullOrWhiteSpace(room.RoomName)) ? room.RoomName + " " + room.RoomNumber : room.RoomNumber
+                        : !(string.IsNullOrEmpty(room.RoomName) || string.IsNullOrWhiteSpace(room.RoomName)) ? room.RoomName : "";
+                        appointmentItem.Start = agendaItem.Start.DateTime;
+                        appointmentItem.End = agendaItem.End.DateTime;
+                        appointmentItem.Subject = agendaItem.Title;
+                        appointmentItem.Body = agendaItem.Description;
+                        appointmentItem.AllDayEvent = agendaItem.IsAllDayEvent;
+                        var remoteDbEntityId = appointmentItem.UserProperties.Add("RemoteDbEntityId", Outlook.OlUserPropertyType.olInteger);
+                        var remoteDbEntityTimeStamp = appointmentItem.UserProperties.Add("RemoteDbEntityTimeStamp", Outlook.OlUserPropertyType.olText);
+                        var roomGuid = appointmentItem.UserProperties.Add("RoomGuid", Outlook.OlUserPropertyType.olText);
+                        remoteDbEntityId.Value = agendaItem.Id;
+                        remoteDbEntityTimeStamp.Value = agendaItem.TimeStamp.ToString();
+                        roomGuid.Value = room.RoomGuid;
+                        switch ((OccupancyVisualState)agendaItem.Occupancy)
+                        {
+                            case OccupancyVisualState.FreeVisualState:
+                                appointmentItem.BusyStatus = Outlook.OlBusyStatus.olFree;
+                                break;
+                            case OccupancyVisualState.PresentVisualState:
+                                appointmentItem.BusyStatus = Outlook.OlBusyStatus.olFree;
+                                break;
+                            case OccupancyVisualState.AbsentVisualState:
+                                appointmentItem.BusyStatus = Outlook.OlBusyStatus.olOutOfOffice;
+                                break;
+                            case OccupancyVisualState.BusyVisualState:
+                                appointmentItem.BusyStatus = Outlook.OlBusyStatus.olBusy;
+                                break;
+                            case OccupancyVisualState.OccupiedVisualState:
+                                appointmentItem.BusyStatus = Outlook.OlBusyStatus.olBusy;
+                                break;
+                            case OccupancyVisualState.LockedVisualState:
+                                appointmentItem.BusyStatus = Outlook.OlBusyStatus.olBusy;
+                                break;
+                            case OccupancyVisualState.UndefinedVisualState:
+                                appointmentItem.BusyStatus = Outlook.OlBusyStatus.olTentative;
+                                break;
+                            default:
+                                break;
+                        }
+                        appointmentItem.Save();
+                    }
                 }
             }
         }
