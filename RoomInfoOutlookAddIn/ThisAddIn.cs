@@ -58,7 +58,7 @@ namespace RoomInfoOutlookAddIn
                         foreach (Outlook.AppointmentItem item in _roomInfocalendar.Items)
                         {
                             if (item.Resources == null) break;
-                            string itemGuid = GetGuid(item.Resources);
+                            string itemGuid = item.UserProperties.Find("RoomGuid").Value;
                             int itemId = int.Parse(item.UserProperties.Find("RemoteDbEntityId").Value);
                             if (itemGuid.Equals(guid) && itemId == id)
                             {
@@ -103,11 +103,12 @@ namespace RoomInfoOutlookAddIn
                 appointmentItem.Location = !(string.IsNullOrEmpty(roomNumber) || string.IsNullOrWhiteSpace(roomNumber))
                     ? !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName + " " + roomNumber : roomNumber
                     : !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName : "";
-                appointmentItem.Resources = roomItem.Room.RoomGuid;
                 var remoteDbEntityId = appointmentItem.UserProperties.Add("RemoteDbEntityId", Outlook.OlUserPropertyType.olInteger);
                 var remoteDbEntityTimeStamp = appointmentItem.UserProperties.Add("RemoteDbEntityTimeStamp", Outlook.OlUserPropertyType.olText);
+                var roomGuid = appointmentItem.UserProperties.Add("RoomGuid", Outlook.OlUserPropertyType.olText);
                 remoteDbEntityId.Value = 0;
                 remoteDbEntityTimeStamp.Value = DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString();
+                roomGuid.Value = roomItem.Room.RoomGuid;
                 appointmentItem.BusyStatus = Outlook.OlBusyStatus.olBusy;
                 appointmentItem.Display();
             }
@@ -128,7 +129,7 @@ namespace RoomInfoOutlookAddIn
 
         private async void CalendarItems_ItemAdd(object Item)
         {
-            if (_isSyncInProgress) return;           
+            if (_isSyncInProgress) return;
             try
             {
                 _appointmentItem = Item as Outlook.AppointmentItem;
@@ -215,7 +216,7 @@ namespace RoomInfoOutlookAddIn
                 TimeStamp = long.Parse(appointmentItem.UserProperties.Find("RemoteDbEntityTimeStamp").Value),
                 Occupancy = occupancy
             };
-            string guid = GetGuid(appointmentItem.Resources);
+            string guid = appointmentItem.UserProperties.Find("RoomGuid").Value;
             var agendaItems = _roomItems.Where(x => x.Room.RoomGuid.Equals(guid)).Select(x => x.AgendaItems).FirstOrDefault();
             if (agendaItems != null)
             {
@@ -295,21 +296,21 @@ namespace RoomInfoOutlookAddIn
         private string GetHostName(IList<RoomItem> roomItems, Outlook.AppointmentItem appointmentItem)
         {
             if (appointmentItem == null || roomItems == null) return null;
-            string guid = GetGuid(appointmentItem.Resources);
+            string guid = appointmentItem.UserProperties.Find("RoomGuid").Value;
             return roomItems.Where(x => x.Room.RoomGuid.Equals(guid)).Select(x => x.HostName).FirstOrDefault();
         }
 
-        private string GetGuid(string appointmentItemResources)
-        {
-            if (appointmentItemResources == null) return null;
-            string guidRegEx = @"[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}";
-            var resources = appointmentItemResources.Split(';');
-            foreach (var resource in resources)
-            {
-                if (Regex.IsMatch(resource, guidRegEx)) return resource;
-            }
-            return null;
-        }
+        //private string GetGuid(string appointmentItemResources)
+        //{
+        //    if (appointmentItemResources == null) return null;
+        //    string guidRegEx = @"[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}";
+        //    var resources = appointmentItemResources.Split(';');
+        //    foreach (var resource in resources)
+        //    {
+        //        if (Regex.IsMatch(resource, guidRegEx)) return resource;
+        //    }
+        //    return null;
+        //}
 
         private Outlook.MAPIFolder CreateCustomCalendarIfNotExists(string calendarName)
         {
@@ -326,7 +327,7 @@ namespace RoomInfoOutlookAddIn
             Outlook.Folder outlookFolderDeletedItems = (Outlook.Folder)Application.Session.GetDefaultFolder(Outlook.OlDefaultFolders.olFolderDeletedItems);
             for (int i = _roomInfocalendar.Items.Count; i > 0; i--)
             {
-                if (GetGuid((_roomInfocalendar.Items[i] as Outlook.AppointmentItem).Resources).Equals(roomGuid))
+                if (((string)(_roomInfocalendar.Items[i] as Outlook.AppointmentItem).UserProperties.Find("RoomGuid").Value).Equals(roomGuid))
                 {
                     int id = (_roomInfocalendar.Items[i] as Outlook.AppointmentItem).UserProperties.Find("RemoteDbEntityId").Value;
                     (_roomInfocalendar.Items[i] as Outlook.AppointmentItem).Delete();
@@ -353,11 +354,12 @@ namespace RoomInfoOutlookAddIn
                     appointmentItem.Subject = agendaItem.Title;
                     appointmentItem.Body = agendaItem.Description;
                     appointmentItem.AllDayEvent = agendaItem.IsAllDayEvent;
-                    appointmentItem.Resources = room.RoomGuid;
                     var remoteDbEntityId = appointmentItem.UserProperties.Add("RemoteDbEntityId", Outlook.OlUserPropertyType.olInteger);
                     var remoteDbEntityTimeStamp = appointmentItem.UserProperties.Add("RemoteDbEntityTimeStamp", Outlook.OlUserPropertyType.olText);
+                    var roomGuid = appointmentItem.UserProperties.Add("RoomGuid", Outlook.OlUserPropertyType.olText);
                     remoteDbEntityId.Value = agendaItem.Id;
                     remoteDbEntityTimeStamp.Value = agendaItem.TimeStamp.ToString();
+                    roomGuid.Value = room.RoomGuid;
                     switch ((OccupancyVisualState)agendaItem.Occupancy)
                     {
                         case OccupancyVisualState.FreeVisualState:
