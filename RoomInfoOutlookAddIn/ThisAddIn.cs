@@ -128,12 +128,19 @@ namespace RoomInfoOutlookAddIn
 
         private async void CalendarItems_ItemAdd(object Item)
         {
-            if (_isSyncInProgress) return;
-            _appointmentItem = Item as Outlook.AppointmentItem;
-            await TransmitAgendaItem(_appointmentItem);
-            string hostName = GetHostName(_roomItems, _appointmentItem);
-            var schedulePackage = new Package() { PayloadType = (int)PayloadType.RequestSchedule };
-            await _networkCommunication.SendPayload(JsonConvert.SerializeObject(schedulePackage), hostName, Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
+            if (_isSyncInProgress) return;           
+            try
+            {
+                _appointmentItem = Item as Outlook.AppointmentItem;
+                await TransmitAgendaItem(_appointmentItem);
+                string hostName = GetHostName(_roomItems, _appointmentItem);
+                var schedulePackage = new Package() { PayloadType = (int)PayloadType.RequestSchedule };
+                await _networkCommunication.SendPayload(JsonConvert.SerializeObject(schedulePackage), hostName, Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
+            }
+            catch (Exception)
+            {
+
+            }
         }
 
         private void ThisAddIn_Shutdown(object sender, EventArgs e)
@@ -325,7 +332,7 @@ namespace RoomInfoOutlookAddIn
                     (_roomInfocalendar.Items[i] as Outlook.AppointmentItem).Delete();
                     for (int j = outlookFolderDeletedItems.Items.Count; j > 0; j--)
                     {
-                        if (outlookFolderDeletedItems.Items[j].UserProperties.Find("RemoteDbEntityId").Value == id) outlookFolderDeletedItems.Items[j].Delete();                        
+                        if (outlookFolderDeletedItems.Items[j].UserProperties.Find("RemoteDbEntityId").Value == id) outlookFolderDeletedItems.Items[j].Delete();
                     }
                 }
             }
