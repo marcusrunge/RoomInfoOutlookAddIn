@@ -108,6 +108,7 @@ namespace RoomInfoOutlookAddIn
                 var remoteDbEntityTimeStamp = appointmentItem.UserProperties.Add("RemoteDbEntityTimeStamp", Outlook.OlUserPropertyType.olText);
                 remoteDbEntityId.Value = 0;
                 remoteDbEntityTimeStamp.Value = DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString();
+                appointmentItem.BusyStatus = Outlook.OlBusyStatus.olBusy;
                 appointmentItem.Display();
             }
             catch (Exception)
@@ -175,6 +176,27 @@ namespace RoomInfoOutlookAddIn
         private async Task TransmitAgendaItem(Outlook.AppointmentItem appointmentItem)
         {
             string hostName = GetHostName(_roomItems, appointmentItem);
+            int occupancy = (int)OccupancyVisualState.UndefinedVisualState;
+            switch (appointmentItem.BusyStatus)
+            {
+                case Outlook.OlBusyStatus.olFree:
+                    occupancy = (int)OccupancyVisualState.FreeVisualState;
+                    break;
+                case Outlook.OlBusyStatus.olTentative:
+                    occupancy = (int)OccupancyVisualState.UndefinedVisualState;
+                    break;
+                case Outlook.OlBusyStatus.olBusy:
+                    occupancy = (int)OccupancyVisualState.BusyVisualState;
+                    break;
+                case Outlook.OlBusyStatus.olOutOfOffice:
+                    occupancy = (int)OccupancyVisualState.AbsentVisualState;
+                    break;
+                case Outlook.OlBusyStatus.olWorkingElsewhere:
+                    occupancy = (int)OccupancyVisualState.AbsentVisualState;
+                    break;
+                default:
+                    break;
+            }
             var updatedAgendaItem = new AgendaItem()
             {
                 Id = appointmentItem.UserProperties.Find("RemoteDbEntityId").Value,
@@ -184,7 +206,7 @@ namespace RoomInfoOutlookAddIn
                 Start = appointmentItem.Start,
                 Title = appointmentItem.Subject,
                 TimeStamp = long.Parse(appointmentItem.UserProperties.Find("RemoteDbEntityTimeStamp").Value),
-            Occupancy = 3
+                Occupancy = occupancy
             };
             string guid = GetGuid(appointmentItem.Resources);
             var agendaItems = _roomItems.Where(x => x.Room.RoomGuid.Equals(guid)).Select(x => x.AgendaItems).FirstOrDefault();
@@ -329,6 +351,32 @@ namespace RoomInfoOutlookAddIn
                     var remoteDbEntityTimeStamp = appointmentItem.UserProperties.Add("RemoteDbEntityTimeStamp", Outlook.OlUserPropertyType.olText);
                     remoteDbEntityId.Value = agendaItem.Id;
                     remoteDbEntityTimeStamp.Value = agendaItem.TimeStamp.ToString();
+                    switch ((OccupancyVisualState)agendaItem.Occupancy)
+                    {
+                        case OccupancyVisualState.FreeVisualState:
+                            appointmentItem.BusyStatus = Outlook.OlBusyStatus.olFree;
+                            break;
+                        case OccupancyVisualState.PresentVisualState:
+                            appointmentItem.BusyStatus = Outlook.OlBusyStatus.olFree;
+                            break;
+                        case OccupancyVisualState.AbsentVisualState:
+                            appointmentItem.BusyStatus = Outlook.OlBusyStatus.olOutOfOffice;
+                            break;
+                        case OccupancyVisualState.BusyVisualState:
+                            appointmentItem.BusyStatus = Outlook.OlBusyStatus.olBusy;
+                            break;
+                        case OccupancyVisualState.OccupiedVisualState:
+                            appointmentItem.BusyStatus = Outlook.OlBusyStatus.olBusy;
+                            break;
+                        case OccupancyVisualState.LockedVisualState:
+                            appointmentItem.BusyStatus = Outlook.OlBusyStatus.olBusy;
+                            break;
+                        case OccupancyVisualState.UndefinedVisualState:
+                            appointmentItem.BusyStatus = Outlook.OlBusyStatus.olTentative;
+                            break;
+                        default:
+                            break;
+                    }
                     appointmentItem.Save();
                 }
             }
