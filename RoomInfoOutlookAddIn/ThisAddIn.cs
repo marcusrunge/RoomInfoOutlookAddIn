@@ -11,7 +11,6 @@ using Newtonsoft.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace RoomInfoOutlookAddIn
 {
@@ -43,9 +42,30 @@ namespace RoomInfoOutlookAddIn
             await _networkCommunication.SendPayload(JsonConvert.SerializeObject(_discoveryPackage), null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
             _eventService.ScheduleReceived += (s, roomItem) =>
             {
+                //SynchronizeRemovedItems(roomItem);
                 AddItemsToCalendar(roomItem.AgendaItems, roomItem.Room);
                 _isSyncInProgress = false;
             };
+        }
+
+        private void SynchronizeRemovedItems(RoomItem roomItem)
+        {
+            _isSyncInProgress = true;
+            for (int i = _roomInfocalendar.Items.Count; i > 0; i--)
+            {
+                try
+                {
+                    int id = -1;
+                    foreach (AgendaItem agendaItem in roomItem.AgendaItems)
+                    {
+                        if (agendaItem.Id == _roomInfocalendar.Items[i].UserProperties.Find("RemoteDbEntityId").Value) id = agendaItem.Id;
+                    }
+                    if (id < 1) _roomInfocalendar.Items[i].Delete();
+                }
+                catch (Exception)
+                {
+                }
+            }
         }
 
         private async void CalendarItems_ItemRemove()
@@ -186,6 +206,7 @@ namespace RoomInfoOutlookAddIn
             _unityContainer.RegisterSingleton<IList<RoomItem>, List<RoomItem>>();
             _networkCommunication = _unityContainer.Resolve<INetworkCommunication>();
             Task.Run(async () => await _networkCommunication.StartConnectionListener(Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl));
+            Task.Run(async () => await _networkCommunication.StartConnectionListener(Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram));
             Outlook.Application outlookApplication = GetHostItem<Outlook.Application>(typeof(Outlook.Application), "Application");
             int languageID = outlookApplication.LanguageSettings.get_LanguageID(MsoAppLanguageID.msoLanguageIDUI);
             Thread.CurrentThread.CurrentUICulture = new CultureInfo(languageID);
