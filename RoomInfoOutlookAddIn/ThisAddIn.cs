@@ -264,7 +264,7 @@ namespace RoomInfoOutlookAddIn
             }
         }
 
-        private Task ProcessPackage(Package package, string hostName)
+        private async Task ProcessPackage(Package package, string hostName)
         {
             if (package != null)
             {
@@ -296,12 +296,13 @@ namespace RoomInfoOutlookAddIn
                     case PayloadType.Discovery:
                         break;
                     case PayloadType.PropertyChanged:
+                        await _networkCommunication.SendPayload(JsonConvert.SerializeObject(_discoveryPackage), null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
                         break;
                     default:
                         break;
                 }
             }
-            return Task.CompletedTask;
+            //return Task.CompletedTask;
         }
 
         private string GetHostName(IList<RoomItem> roomItems, Outlook.AppointmentItem appointmentItem)
