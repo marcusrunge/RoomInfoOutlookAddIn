@@ -42,36 +42,14 @@ namespace RoomInfoOutlookAddIn
             await _networkCommunication.SendPayload(JsonConvert.SerializeObject(_discoveryPackage), null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
             _eventService.ScheduleReceived += (s, roomItem) =>
             {
-                //SynchronizeRemovedItems(roomItem);
                 AddItemsToCalendar(roomItem.AgendaItems, roomItem.Room);
                 _isSyncInProgress = false;
             };
-        }
-
-        private void SynchronizeRemovedItems(RoomItem roomItem)
-        {
-            _isSyncInProgress = true;
-            for (int i = _roomInfocalendar.Items.Count; i > 0; i--)
-            {
-                try
-                {
-                    int id = -1;
-                    foreach (AgendaItem agendaItem in roomItem.AgendaItems)
-                    {
-                        if (agendaItem.Id == _roomInfocalendar.Items[i].UserProperties.Find("RemoteDbEntityId").Value) id = agendaItem.Id;
-                    }
-                    if (id < 1) _roomInfocalendar.Items[i].Delete();
-                }
-                catch (Exception)
-                {
-                }
-            }
-        }
+        }        
 
         private async void CalendarItems_ItemRemove()
         {
             if (_isSyncInProgress) return;
-            //await _networkCommunication.SendPayload(JsonConvert.SerializeObject(_discoveryPackage), null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
             try
             {
                 foreach (var roomItem in _roomItems)
@@ -119,13 +97,10 @@ namespace RoomInfoOutlookAddIn
             ClearCalendar(roomItem);
             var schedulePackage = new Package() { PayloadType = (int)PayloadType.RequestSchedule };
             await _networkCommunication.SendPayload(JsonConvert.SerializeObject(schedulePackage), roomItem.HostName, Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
-            //AddItemsToCalendar(roomItem.AgendaItems, roomItem.Room);
-            //_isSyncInProgress = false;
         }
 
         private void ThisAddIn_AddButtonPressed(object sender, RoomItem roomItem)
         {
-            //await _networkCommunication.SendPayload("", null, Properties.Settings.Default.UdpPort, NetworkProtocol.UserDatagram, true);
             try
             {
                 var roomNumber = roomItem.Room.RoomNumber;
@@ -154,8 +129,6 @@ namespace RoomInfoOutlookAddIn
             if (_isSyncInProgress) return;
             _appointmentItem = Item as Outlook.AppointmentItem;
             await TransmitAgendaItem(_appointmentItem);
-            //var schedulePackage = new Package() { PayloadType = (int)PayloadType.RequestSchedule };
-            //await _networkCommunication.SendPayload(JsonConvert.SerializeObject(schedulePackage), GetHostName(_roomItems, _appointmentItem), Properties.Settings.Default.TcpPort, NetworkProtocol.TransmissionControl);
         }
 
         private async void CalendarItems_ItemAdd(object Item)
@@ -323,7 +296,6 @@ namespace RoomInfoOutlookAddIn
                         break;
                 }
             }
-            //return Task.CompletedTask;
         }
 
         private string GetHostName(IList<RoomItem> roomItems, Outlook.AppointmentItem appointmentItem)
