@@ -466,19 +466,13 @@
         "Entry"
         {
         "MsmKey" = "8:_9CF3BC0E0A728239D6F09F375F3817A0"
-        "OwnerKey" = "8:_CA112FC56DEF4D2D872AB83C5E96E756"
+        "OwnerKey" = "8:_827D6A6E521E0B72FA2DC7654ABB9C88"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_9CF3BC0E0A728239D6F09F375F3817A0"
         "OwnerKey" = "8:_4F2ADEDFBE5B478F8D90DAF13F55D584"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_9CF3BC0E0A728239D6F09F375F3817A0"
-        "OwnerKey" = "8:_827D6A6E521E0B72FA2DC7654ABB9C88"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -669,12 +663,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_CA112FC56DEF4D2D872AB83C5E96E756"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_CC61BF257F4BC7B7ADE6C8EDD4D76617"
         "OwnerKey" = "8:_4F2ADEDFBE5B478F8D90DAF13F55D584"
         "MsmSig" = "8:_UNDEFINED"
@@ -807,12 +795,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_EEB8BAED91EA8207C1770FED2A2871BD"
-        "OwnerKey" = "8:_CA112FC56DEF4D2D872AB83C5E96E756"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_F0CEC5D25EDB65F4118F9925FE63C114"
         "OwnerKey" = "8:_4F2ADEDFBE5B478F8D90DAF13F55D584"
         "MsmSig" = "8:_UNDEFINED"
@@ -845,12 +827,6 @@
         {
         "MsmKey" = "8:_FE0AE814BFE9D71E71FFA68C2A3B1D4D"
         "OwnerKey" = "8:_4F2ADEDFBE5B478F8D90DAF13F55D584"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_EEB8BAED91EA8207C1770FED2A2871BD"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -893,6 +869,12 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_827D6A6E521E0B72FA2DC7654ABB9C88"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_9CF3BC0E0A728239D6F09F375F3817A0"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -1591,18 +1573,6 @@
         "OwnerKey" = "8:_7A9C178FECEF7F6E821C30B70EDA255C"
         "MsmSig" = "8:_UNDEFINED"
         }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_9CF3BC0E0A728239D6F09F375F3817A0"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_CA112FC56DEF4D2D872AB83C5E96E756"
-        "MsmSig" = "8:_UNDEFINED"
-        }
     }
     "Configurations"
     {
@@ -1628,6 +1598,14 @@
             "PrerequisitesLocation" = "2:1"
             "Url" = "8:"
             "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.6.1"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.6.1 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.6.1"
+                    }
+                }
             }
         }
         "Release"
@@ -5348,37 +5326,6 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_EEB8BAED91EA8207C1770FED2A2871BD"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:System.Net.Http, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
-                "ScatterAssemblies"
-                {
-                    "_EEB8BAED91EA8207C1770FED2A2871BD"
-                    {
-                    "Name" = "8:System.Net.Http.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Net.Http.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_E2CE83260C824D81997CE112F242DBB2"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_F0CEC5D25EDB65F4118F9925FE63C114"
             {
             "AssemblyRegister" = "3:1"
@@ -6143,7 +6090,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_4F2ADEDFBE5B478F8D90DAF13F55D584"
             {
-            "SourcePath" = "8:..\\RoomInfoOutlookAddIn\\obj\\Release\\RoomInfoOutlookAddIn.dll"
+            "SourcePath" = "8:..\\RoomInfoOutlookAddIn\\obj\\Debug\\RoomInfoOutlookAddIn.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_E2CE83260C824D81997CE112F242DBB2"
@@ -6164,34 +6111,6 @@
             "OutputConfiguration" = "8:"
             "OutputGroupCanonicalName" = "8:Built"
             "OutputProjectGuid" = "8:{464645E7-96B5-46B7-9D78-B3983EEF85BA}"
-            "ShowKeyOutput" = "11:TRUE"
-                "ExcludeFilters"
-                {
-                }
-            }
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_CA112FC56DEF4D2D872AB83C5E96E756"
-            {
-            "SourcePath" = "8:..\\ApplicationServiceLibrary\\obj\\Release\\ApplicationServiceLibrary.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_E2CE83260C824D81997CE112F242DBB2"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            "ProjectOutputGroupRegister" = "3:1"
-            "OutputConfiguration" = "8:"
-            "OutputGroupCanonicalName" = "8:Built"
-            "OutputProjectGuid" = "8:{8933C6A8-55DF-407E-8F38-F5D5C798BB13}"
             "ShowKeyOutput" = "11:TRUE"
                 "ExcludeFilters"
                 {
