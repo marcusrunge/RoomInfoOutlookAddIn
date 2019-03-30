@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 
 namespace RoomInfoOutlookAddIn
 {
@@ -20,10 +21,11 @@ namespace RoomInfoOutlookAddIn
         IEventService _eventService;
         INetworkCommunication _networkCommunication;
         IList<RoomItem> _roomItems;
-        Outlook.AppointmentItem _appointmentItem;
+        Outlook.AppointmentItem _appointmentItem, _openAppointmentItem;
         Outlook.MAPIFolder _roomInfocalendar;
         Package _discoveryPackage;
         bool _isSyncInProgress;
+        Outlook.Explorer currentExplorer = null;
 
         private async void ThisAddIn_Startup(object sender, EventArgs e)
         {
@@ -45,6 +47,30 @@ namespace RoomInfoOutlookAddIn
                 AddItemsToCalendar(roomItem.AgendaItems, roomItem.Room);
                 _isSyncInProgress = false;
             };
+            currentExplorer = Application.ActiveExplorer();
+            currentExplorer.SelectionChange += new Outlook.ExplorerEvents_10_SelectionChangeEventHandler(CurrentExplorer_Event);
+        }
+
+        private void CurrentExplorer_Event()
+        {
+            Outlook.MAPIFolder selectedFolder = Application.ActiveExplorer().CurrentFolder;            
+            try
+            {
+                if (Application.ActiveExplorer().Selection.Count > 0)
+                {
+                    object selObject = Application.ActiveExplorer().Selection[1];
+                    if (selObject is Outlook.AppointmentItem)
+                    {
+                        if (_openAppointmentItem != null) _openAppointmentItem.Close(Outlook.OlInspectorClose.olDiscard);
+                        _openAppointmentItem = (selObject as Outlook.AppointmentItem);
+                        _openAppointmentItem.Open += (ref bool c) => _eventService.OnOutlookAppointmentItemOpen(_openAppointmentItem);
+                    }                    
+                }
+            }
+            catch (Exception)
+            {
+                
+            }
         }
 
         private async void CalendarItems_ItemRemove()
