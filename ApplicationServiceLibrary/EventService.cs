@@ -14,8 +14,8 @@ namespace ApplicationServiceLibrary
         event EventHandler<RoomItem> ScheduleReceived;
         void OnScheduleReceived(RoomItem roomItem);
 
-        event EventHandler<Microsoft.Office.Interop.Outlook.AppointmentItem> OutlookAppointmentItemOpen;
-        void OnOutlookAppointmentItemOpen(Microsoft.Office.Interop.Outlook.AppointmentItem outlookAppointmentItem);
+        //event EventHandler<Microsoft.Office.Interop.Outlook.AppointmentItem> OutlookAppointmentItemOpen;
+        //void OnOutlookAppointmentItemOpen(Microsoft.Office.Interop.Outlook.AppointmentItem outlookAppointmentItem);
     }
 
     public class EventService : IEventService
@@ -29,7 +29,7 @@ namespace ApplicationServiceLibrary
         public event EventHandler<RoomItem> ScheduleReceived;
         public void OnScheduleReceived(RoomItem roomItem) => ScheduleReceived?.Invoke(null, roomItem);
 
-        public event EventHandler<Microsoft.Office.Interop.Outlook.AppointmentItem> OutlookAppointmentItemOpen;
-        public void OnOutlookAppointmentItemOpen(Microsoft.Office.Interop.Outlook.AppointmentItem outlookAppointmentItem) => OutlookAppointmentItemOpen?.Invoke(null, outlookAppointmentItem);
+        //public event EventHandler<Microsoft.Office.Interop.Outlook.AppointmentItem> OutlookAppointmentItemOpen;
+        //public void OnOutlookAppointmentItemOpen(Microsoft.Office.Interop.Outlook.AppointmentItem outlookAppointmentItem) => OutlookAppointmentItemOpen?.Invoke(null, outlookAppointmentItem);
     }
 }

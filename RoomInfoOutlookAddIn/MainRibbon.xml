@@ -7,7 +7,7 @@
           <dropDown id="roomsDropDown" onAction="OnDropDownAction" getItemCount="GetItemCount" getItemLabel="GetItemLabel" getSelectedItemIndex="GetSelectedItemIndex" sizeString="ABCDEFGHIJKLMNOPQ"/>
           <dropDown id="occupancyDropDown" onAction="OnDropDownAction" getSelectedItemIndex="GetSelectedItemIndex" getItemCount="GetItemCount" getItemLabel="GetItemLabel" sizeString="ABCDEFGHIJKLMNOPQ"/>
           <box id="buttonBox" boxStyle="horizontal">
-            <button id="agendaButton" label="Agenda" onAction="OnAction" />
+            <labelControl id="label" label=" "/>
             <button id="recycleButton" onAction="OnAction" getLabel="OnGetLabel"/>
           </box>
         </group>
