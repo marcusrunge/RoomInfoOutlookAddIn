@@ -69,7 +69,7 @@ namespace RoomInfoOutlookAddIn
         //    }
         //    catch (Exception)
         //    {
-                
+
         //    }
         //}
 
@@ -216,7 +216,7 @@ namespace RoomInfoOutlookAddIn
 
         private async Task TransmitAgendaItem(Outlook.AppointmentItem appointmentItem)
         {
-            string hostName = GetHostName(_roomItems, appointmentItem);            
+            string hostName = GetHostName(_roomItems, appointmentItem);
             var updatedAgendaItem = new AgendaItem()
             {
                 Id = appointmentItem.UserProperties.Find("RemoteDbEntityId").Value,
@@ -348,11 +348,23 @@ namespace RoomInfoOutlookAddIn
             {
                 if (((string)(_roomInfocalendar.Items[i] as Outlook.AppointmentItem).UserProperties.Find("RoomGuid").Value).Equals(roomItem.Room.RoomGuid))
                 {
-                    int id = (_roomInfocalendar.Items[i] as Outlook.AppointmentItem).UserProperties.Find("RemoteDbEntityId").Value;
-                    (_roomInfocalendar.Items[i] as Outlook.AppointmentItem).Delete();
-                    for (int j = outlookFolderDeletedItems.Items.Count; j > 0; j--)
+                    try
                     {
-                        if (outlookFolderDeletedItems.Items[j].UserProperties.Find("RemoteDbEntityId").Value == id) outlookFolderDeletedItems.Items[j].Delete();
+                        int id = (_roomInfocalendar.Items[i] as Outlook.AppointmentItem).UserProperties.Find("RemoteDbEntityId").Value;
+                        (_roomInfocalendar.Items[i] as Outlook.AppointmentItem).Delete();
+                        for (int j = outlookFolderDeletedItems.Items.Count; j > 0; j--)
+                        {
+                            try
+                            {
+                                if (outlookFolderDeletedItems.Items[j].UserProperties.Find("RemoteDbEntityId").Value == id) outlookFolderDeletedItems.Items[j].Delete();
+                            }
+                            catch (Exception)
+                            {
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
                     }
                 }
             }
@@ -391,7 +403,7 @@ namespace RoomInfoOutlookAddIn
                             remoteDbEntityId.Value = agendaItem.Id;
                             remoteDbEntityTimeStamp.Value = agendaItem.TimeStamp.ToString();
                             roomGuid.Value = room.RoomGuid;
-                            occupancy.Value = agendaItem.Occupancy;                            
+                            occupancy.Value = agendaItem.Occupancy;
                             appointmentItem.Save();
                         }
                     }
