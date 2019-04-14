@@ -43,6 +43,7 @@ namespace RoomInfoOutlookAddIn
             occupancyComboBox.Items.Add(_resourceManager.GetString("DropDown_ItemLabel_Occupancy_Busy"));
             occupancyComboBox.Items.Add(_resourceManager.GetString("DropDown_ItemLabel_Occupancy_Occupied"));
             occupancyComboBox.Items.Add(_resourceManager.GetString("DropDown_ItemLabel_Occupancy_Locked"));
+            occupancyComboBox.Items.Add(_resourceManager.GetString("DropDown_ItemLabel_Occupancy_Home"));
             var formRegionControl = sender as Microsoft.Office.Tools.Outlook.FormRegionControl;
             _outlookAppointmentItem = (Outlook.AppointmentItem)formRegionControl.OutlookItem;
             if (_outlookAppointmentItem != null && _outlookAppointmentItem.UserProperties.Find("Occupancy") != null)

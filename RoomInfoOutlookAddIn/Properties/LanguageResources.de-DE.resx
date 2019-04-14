@@ -126,6 +126,9 @@
   <data name="DropDown_ItemLabel_Occupancy_Free" xml:space="preserve">
     <value>FREI</value>
   </data>
+  <data name="DropDown_ItemLabel_Occupancy_Home" xml:space="preserve">
+    <value>HEIMBÜRO</value>
+  </data>
   <data name="DropDown_ItemLabel_Occupancy_Locked" xml:space="preserve">
     <value>GESPERRT</value>
   </data>

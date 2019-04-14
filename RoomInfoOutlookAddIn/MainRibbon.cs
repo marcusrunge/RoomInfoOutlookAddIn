@@ -238,6 +238,7 @@ namespace RoomInfoOutlookAddIn
                         case 3: return _resourceManager.GetString("DropDown_ItemLabel_Occupancy_Busy");
                         case 4: return _resourceManager.GetString("DropDown_ItemLabel_Occupancy_Occupied");
                         case 5: return _resourceManager.GetString("DropDown_ItemLabel_Occupancy_Locked");
+                        case 6:return _resourceManager.GetString("DropDown_ItemLabel_Occupancy_Home");
                         default: return "";
                     }
                 default: return "";
