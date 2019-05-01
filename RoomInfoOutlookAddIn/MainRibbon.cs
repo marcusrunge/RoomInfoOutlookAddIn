@@ -163,7 +163,7 @@ namespace RoomInfoOutlookAddIn
             switch (control.Id)
             {
                 case "roomsDropDown": return _roomItems != null ? _roomItems.Count : 0;
-                case "occupancyDropDown": return 6;
+                case "occupancyDropDown": return 7;
                 default: return 0;
             }
         }
