@@ -214,7 +214,7 @@ namespace RoomInfoOutlookAddIn
             switch (control.Id)
             {
                 case "addButton": return Properties.Resources.add;
-                case "syncButton":return Properties.Resources.refresh;
+                case "syncButton": return Properties.Resources.refresh;
                 default: return null;
             }
         }
@@ -224,11 +224,15 @@ namespace RoomInfoOutlookAddIn
             switch (control.Id)
             {
                 case "roomsDropDown":
-                    var roomNumber = _roomItems[index].Room.RoomNumber;
-                    var roomName = _roomItems[index].Room.RoomName;
-                    return !(string.IsNullOrEmpty(roomNumber) || string.IsNullOrWhiteSpace(roomNumber))
-                        ? !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName + " " + roomNumber : roomNumber
-                        : !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName : "";
+                    if (_roomItems[index].Room != null)
+                    {
+                        var roomNumber = _roomItems[index].Room.RoomNumber;
+                        var roomName = _roomItems[index].Room.RoomName;
+                        return !(string.IsNullOrEmpty(roomNumber) || string.IsNullOrWhiteSpace(roomNumber))
+                            ? !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName + " " + roomNumber : roomNumber
+                            : !(string.IsNullOrEmpty(roomName) || string.IsNullOrWhiteSpace(roomName)) ? roomName : "";
+                    }
+                    else return "null";
                 case "occupancyDropDown":
                     switch (index)
                     {
@@ -238,7 +242,7 @@ namespace RoomInfoOutlookAddIn
                         case 3: return _resourceManager.GetString("DropDown_ItemLabel_Occupancy_Busy");
                         case 4: return _resourceManager.GetString("DropDown_ItemLabel_Occupancy_Occupied");
                         case 5: return _resourceManager.GetString("DropDown_ItemLabel_Occupancy_Locked");
-                        case 6:return _resourceManager.GetString("DropDown_ItemLabel_Occupancy_Home");
+                        case 6: return _resourceManager.GetString("DropDown_ItemLabel_Occupancy_Home");
                         default: return "";
                     }
                 default: return "";
@@ -252,7 +256,10 @@ namespace RoomInfoOutlookAddIn
             switch (control.Id)
             {
                 case "roomsDropDown": return _selectedRoomId;
-                case "occupancyDropDown": return _roomItems != null && _roomItems.Count >= _selectedRoomId + 1 ? _roomItems[_selectedRoomId].Room.Occupancy : 0;
+                case "occupancyDropDown":
+                    return _roomItems[_selectedRoomId].Room != null
+                        ? _roomItems != null && _roomItems.Count >= _selectedRoomId + 1 ? _roomItems[_selectedRoomId].Room.Occupancy : 0
+                        : 0;
                 default: return 0;
             }
         }
@@ -268,7 +275,7 @@ namespace RoomInfoOutlookAddIn
                         var room = JsonConvert.DeserializeObject<Room>(package.Payload.ToString());
                         for (int i = 0; i < _roomItems.Count; i++)
                         {
-                            if (_roomItems[i].Room.RoomGuid.Equals(room.RoomGuid))
+                            if (_roomItems[i].Room != null && _roomItems[i].Room.RoomGuid.Equals(room.RoomGuid))
                             {
                                 _roomItems.RemoveAt(i);
                                 break;
@@ -288,8 +295,8 @@ namespace RoomInfoOutlookAddIn
                                 _roomItems[i].AgendaItems = agendaItems;
                                 _eventService.OnScheduleReceived(_roomItems[i]);
                                 break;
-                            }                            
-                        }                        
+                            }
+                        }
                         break;
                     case PayloadType.StandardWeek:
                         break;
