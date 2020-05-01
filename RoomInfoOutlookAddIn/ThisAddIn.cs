@@ -1,17 +1,17 @@
-﻿using System;
-using Outlook = Microsoft.Office.Interop.Outlook;
-using System.Threading;
-using System.Globalization;
-using Unity;
+﻿using ApplicationServiceLibrary;
 using Microsoft.Office.Core;
-using ApplicationServiceLibrary;
 using ModelLibrary;
-using static ModelLibrary.Enums;
 using Newtonsoft.Json;
-using System.Threading.Tasks;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using Unity;
+using static ModelLibrary.Enums;
+using Outlook = Microsoft.Office.Interop.Outlook;
 
 namespace RoomInfoOutlookAddIn
 {
